@@ -69,7 +69,7 @@ public class VirtualHighMonitorJob {
 
         //使用 aggregate 的方式先预聚合计算，内存中存的聚合后的数据非明细数据
         DataStream<ItemViewCountDO> windowdData = timedData.keyBy(new PoiIdSelector())
-                .window(SlidingProcessingTimeWindows.of(Time.minutes(5), Time.seconds(1)))
+                .window(SlidingProcessingTimeWindows.of(Time.minutes(5), Time.minutes(1)))
                 .aggregate(new CounterPoiAggrateFunction(),new WindowResultFunction()).name("4. aggregate data by poiId");
         //参考文章： https://yq.aliyun.com/articles/706029
         DataStream<String> processData = windowdData.keyBy("windowEnd").process(new TopNHotItems(5)).name("5. process top N");
