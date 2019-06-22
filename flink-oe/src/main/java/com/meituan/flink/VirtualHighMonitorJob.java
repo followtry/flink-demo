@@ -45,7 +45,7 @@ public class VirtualHighMonitorJob {
         consumer08.build(new org.apache.flink.api.common.serialization.SimpleStringSchema());
         Map.Entry<KafkaTopic, FlinkKafkaConsumerBase> consumerBaseEntry = consumer08.getConsumerByName("app.mafka.hotel.oe.qualitycontrol.virtualhigh", "rz_kafka08-default");
 
-        DataStream source = env.addSource(consumerBaseEntry.getValue()).name("1. src_topic_name").setParallelism(6);
+        DataStream source = env.addSource(consumerBaseEntry.getValue()).name("1. src_topic_name").setParallelism(2);
 
         DataStream<QualityControlResultMq> jsonData = source.rebalance().map(new QcJsonDataParse()).name("2. parse json data");
         DataStream<QualityControlResultMq> filterData = jsonData.filter(o -> o != null && o.getClientAppKey() != null).uid("3. filter null data").name("3. filter null data");
@@ -78,7 +78,7 @@ public class VirtualHighMonitorJob {
                 .keyBy(new EndTimeSelector())
                 .process(new TopNHotItems2(10)).name("5. process sub top N");
         DataStream<String> allData = processData.windowAll(TumblingProcessingTimeWindows.of(Time.minutes(1))).process(new TopNHotItems4(10)).name("5.1 process all top n");
-        allData.addSink(new SinkConsole3()).setParallelism(6).name("6. sink to console");
+        allData.addSink(new SinkConsole3()).setParallelism(2).name("6. sink to console");
         env.execute((new JobConf(args)).getJobName());
     }
 
