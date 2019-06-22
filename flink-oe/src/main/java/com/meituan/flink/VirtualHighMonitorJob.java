@@ -76,8 +76,8 @@ public class VirtualHighMonitorJob {
         //参考文章： https://yq.aliyun.com/articles/706029
         DataStream<List<ItemViewCountDO>> processData = windowdData
                 .keyBy(new EndTimeSelector())
-                .process(new TopNHotItems2(5)).name("5. process sub top N");
-        DataStream<String> allData = processData.windowAll(TumblingProcessingTimeWindows.of(Time.minutes(1))).process(new TopNHotItems4(5)).name("5.1 process all top n");
+                .process(new TopNHotItems2(10)).name("5. process sub top N");
+        DataStream<String> allData = processData.windowAll(TumblingProcessingTimeWindows.of(Time.minutes(1))).process(new TopNHotItems4(10)).name("5.1 process all top n");
         allData.addSink(new SinkConsole3()).setParallelism(1).name("6. sink to console");
         env.execute((new JobConf(args)).getJobName());
     }

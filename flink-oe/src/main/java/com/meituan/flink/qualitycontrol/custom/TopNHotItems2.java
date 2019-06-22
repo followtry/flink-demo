@@ -1,17 +1,14 @@
 package com.meituan.flink.qualitycontrol.custom;
 
 import com.meituan.flink.qualitycontrol.dto.ItemViewCountDO;
-import org.apache.commons.lang.time.DateFormatUtils;
 import org.apache.flink.api.common.state.ListState;
 import org.apache.flink.api.common.state.ListStateDescriptor;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.streaming.api.functions.KeyedProcessFunction;
 import org.apache.flink.util.Collector;
 
-import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.Date;
 import java.util.List;
 
 /**
@@ -57,11 +54,6 @@ public class TopNHotItems2 extends KeyedProcessFunction<String,ItemViewCountDO,L
                 return (int) (o2.getCount() - o1.getCount());
             }
         });
-        // 将排名信息格式化成 String, 便于打印
-        StringBuilder result = new StringBuilder();
-        String now = DateFormatUtils.format(new Date(), "yyyy-MM-dd HH:mm:ss");
-        result.append("==========当前时间:").append(now).append("==========================\n");
-        result.append("时间: ").append(new Timestamp(timestamp-1)).append("\n");
         //避免产品数量不够导致 NPE 的异常
         if (allItems.size() < topSize) {
             topSize = allItems.size();
@@ -71,7 +63,6 @@ public class TopNHotItems2 extends KeyedProcessFunction<String,ItemViewCountDO,L
             ItemViewCountDO currentItem = allItems.get(i);
             results.add(currentItem);
         }
-        result.append("====================================\n\n");
         Thread.sleep(1000);
         out.collect(results);
     }

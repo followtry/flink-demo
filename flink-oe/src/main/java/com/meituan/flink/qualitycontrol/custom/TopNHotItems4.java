@@ -60,7 +60,7 @@ public class TopNHotItems4 extends ProcessAllWindowFunction<List<ItemViewCountDO
         for (int i=0;i<topSize;i++) {
             ItemViewCountDO currentItem = allItems.get(i);
             // No1:  商品ID=12224  浏览量=2413
-            result.append("No").append(i).append(":")
+            result.append("No ").append(i+1).append(" :")
                     .append("  商品ID=").append(currentItem.getKey())
                     .append("  浏览量=").append(currentItem.getCount())
                     .append("  winStart=").append(currentItem.getWindowStart())
