@@ -3,22 +3,20 @@ package com.meituan.flink;
 import com.meituan.flink.common.config.JobConf;
 import com.meituan.flink.common.config.KafkaTopic;
 import com.meituan.flink.common.kafka.MTKafkaConsumer08;
+import com.meituan.flink.qualitycontrol.CounterWindow;
 import com.meituan.flink.qualitycontrol.QcJsonDataParse;
 import com.meituan.flink.qualitycontrol.QualityControlResultMq;
 import com.meituan.flink.qualitycontrol.VirtualHighKeySelector;
-import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.datastream.KeyedStream;
 import org.apache.flink.streaming.api.datastream.WindowedStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
-import org.apache.flink.streaming.api.functions.windowing.WindowFunction;
 import org.apache.flink.streaming.api.windowing.assigners.SlidingProcessingTimeWindows;
 import org.apache.flink.streaming.api.windowing.time.Time;
 import org.apache.flink.streaming.api.windowing.windows.TimeWindow;
 import org.apache.flink.streaming.connectors.kafka.FlinkKafkaConsumerBase;
 
 import java.util.Map;
-import java.util.Objects;
 
 /**
  * @author jingzhongzhi
@@ -45,17 +43,7 @@ public class VirtualHighMonitorJob {
 
         KeyedStream<QualityControlResultMq, String> keyedStream = filterData.keyBy(new VirtualHighKeySelector());
         WindowedStream<QualityControlResultMq, String, TimeWindow> window = keyedStream.window(SlidingProcessingTimeWindows.of(Time.seconds(10), Time.seconds(30)));
-        window.apply((WindowFunction<QualityControlResultMq, Tuple2<String, Long>, String, TimeWindow>) (key, window1, input, out) -> {
-            Long count =0L;
-            for (QualityControlResultMq resultMq : input) {
-                if (Objects.equals(key, resultMq.getClientIp())) {
-                    count++;
-                }
-            }
-            //统计总数
-            Tuple2<String, Long> result = Tuple2.of(key, count);
-            out.collect(result);
-        }).uid("4. sum data by client ip");
+        window.apply((new CounterWindow())).uid("4. sum data by client ip");
 
         env.execute((new JobConf(args)).getJobName());
     }
