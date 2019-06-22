@@ -5,6 +5,9 @@ import com.meituan.flink.qualitycontrol.dto.QualityControlResultMq;
 import com.meituan.flink.utils.JsonParseHelper;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.flink.api.common.functions.MapFunction;
+import org.apache.flink.shaded.guava18.com.google.common.util.concurrent.RateLimiter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Date;
 
@@ -16,8 +19,17 @@ import java.util.Date;
  */
 public class QcJsonDataParse implements MapFunction<String, QualityControlResultMq> {
 
+    private static final Logger log = LoggerFactory.getLogger(QcJsonDataParse.class);
+
+    private RateLimiter rateLimiter = RateLimiter.create(10);
+
     @Override
     public QualityControlResultMq map(String s) {
+
+        rateLimiter.acquire();
+        
+        log.info("原始 mq: {}",s);
+
         String jsonString = JsonParseHelper.pureJsonString(s);
         Date now = new Date();
         if (!StringUtils.startsWith(jsonString, "{") || !StringUtils.endsWith(jsonString, "}")) {
