@@ -2,7 +2,7 @@ package com.meituan.flink;
 
 import com.meituan.flink.common.config.JobConf;
 import com.meituan.flink.common.config.KafkaTopic;
-import com.meituan.flink.common.kafka.MTKafkaConsumer010;
+import com.meituan.flink.common.kafka.MTKafkaConsumer08;
 import com.meituan.flink.qualitycontrol.QcJsonDataParse;
 import com.meituan.flink.qualitycontrol.QualityControlResultMq;
 import com.meituan.flink.qualitycontrol.VirtualHighKeySelector;
@@ -32,11 +32,11 @@ public class VirtualHighMonitorJob {
      */
     public static void main(String[] args) throws Exception {
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
-        MTKafkaConsumer010 consumer = new MTKafkaConsumer010(args);
-        consumer.build(new org.apache.flink.api.common.serialization.SimpleStringSchema());
-        Map.Entry<KafkaTopic, FlinkKafkaConsumerBase> consumerBaseEntry = consumer.getConsumerByName("app.mafka.hotel.oe.qualitycontrol.virtualhigh", "rz_kafka08-default");
+        MTKafkaConsumer08 consumer08 = new MTKafkaConsumer08(args);
+        consumer08.build(new org.apache.flink.api.common.serialization.SimpleStringSchema());
+        Map.Entry<KafkaTopic, FlinkKafkaConsumerBase> consumerBaseEntry = consumer08.getConsumerByName("app.mafka.hotel.oe.qualitycontrol.virtualhigh", "rz_kafka08-default");
 
-        DataStream source = env.addSource(consumerBaseEntry.getValue()).setParallelism(consumerBaseEntry.getKey().getParallelism()).uid("1. src_topic_name").name("1. src_topic_name");
+        DataStream source = env.addSource(consumerBaseEntry.getValue()).uid("1. src_topic_name").name("1. src_topic_name");
 
 
 
