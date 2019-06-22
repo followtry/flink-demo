@@ -13,6 +13,7 @@ import com.meituan.flink.qualitycontrol.dto.QualityControlResultMq;
 import com.meituan.flink.qualitycontrol.key.EndTimeSelector;
 import com.meituan.flink.qualitycontrol.key.PoiIdSelector;
 import com.meituan.flink.qualitycontrol.parse.QcJsonDataParse;
+import com.meituan.flink.qualitycontrol.sink.SinkConsole3;
 import com.meituan.flink.qualitycontrol.window.WindowResultFunction;
 import org.apache.flink.api.common.functions.FlatMapFunction;
 import org.apache.flink.api.java.tuple.Tuple2;
@@ -76,8 +77,8 @@ public class VirtualHighMonitorJob {
         DataStream<List<ItemViewCountDO>> processData = windowdData
                 .keyBy(new EndTimeSelector())
                 .process(new TopNHotItems2(5)).name("5. process sub top N");
-        processData.windowAll(TumblingProcessingTimeWindows.of(Time.minutes(1))).process(new TopNHotItems4(5)).name("");
-//        processData.addSink(new SinkConsole3()).setParallelism(1).name("6. sink to console");
+        DataStream<String> allData = processData.windowAll(TumblingProcessingTimeWindows.of(Time.minutes(1))).process(new TopNHotItems4(5)).name("5.1 process all top n");
+        allData.addSink(new SinkConsole3()).setParallelism(1).name("6. sink to console");
         env.execute((new JobConf(args)).getJobName());
     }
 
