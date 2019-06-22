@@ -34,16 +34,15 @@ public class VirtualHighMonitorJob {
         consumer08.build(new org.apache.flink.api.common.serialization.SimpleStringSchema());
         Map.Entry<KafkaTopic, FlinkKafkaConsumerBase> consumerBaseEntry = consumer08.getConsumerByName("app.mafka.hotel.oe.qualitycontrol.virtualhigh", "rz_kafka08-default");
 
-        DataStream source = env.addSource(consumerBaseEntry.getValue()).uid("1. src_topic_name").name("1. src_topic_name");
+        DataStream source = env.addSource(consumerBaseEntry.getValue()).name("1. src_topic_name");
 
 
 
-        DataStream<QualityControlResultMq> jsonData = source.rebalance().map(new QcJsonDataParse()).uid("2. parse json data").name("2. parse json data");
+        DataStream<QualityControlResultMq> jsonData = source.rebalance().map(new QcJsonDataParse()).name("2. parse json data");
         DataStream<QualityControlResultMq> filterData = jsonData.filter(o -> o != null && o.getClientIp() != null).uid("3. filter null data").name("3. filter null data");
 
-        DataStream<WC> source2 = filterData.keyBy(new VirtualHighKeySelector()).window(SlidingProcessingTimeWindows.of(Time.seconds(10), Time.seconds(30))).apply((new CounterWindow())).uid("4. sum data by client ip");
-        source2.map(Tuple2::toString);
-        source2.addSink(new SinkConsole());
+        DataStream<WC> source2 = filterData.keyBy(new VirtualHighKeySelector()).window(SlidingProcessingTimeWindows.of(Time.seconds(10), Time.seconds(30))).apply((new CounterWindow())).name("4. sum data by client ip");
+        source2.addSink(new SinkConsole()).name("sink to console");
         env.execute((new JobConf(args)).getJobName());
     }
 
