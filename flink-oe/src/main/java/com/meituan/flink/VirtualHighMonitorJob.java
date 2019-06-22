@@ -12,7 +12,7 @@ import com.meituan.flink.qualitycontrol.VirtualHighKeySelector;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
-import org.apache.flink.streaming.api.windowing.assigners.SlidingProcessingTimeWindows;
+import org.apache.flink.streaming.api.windowing.assigners.TumblingProcessingTimeWindows;
 import org.apache.flink.streaming.api.windowing.time.Time;
 import org.apache.flink.streaming.connectors.kafka.FlinkKafkaConsumerBase;
 
@@ -41,7 +41,7 @@ public class VirtualHighMonitorJob {
         DataStream<QualityControlResultMq> jsonData = source.rebalance().map(new QcJsonDataParse()).name("2. parse json data");
         DataStream<QualityControlResultMq> filterData = jsonData.filter(o -> o != null && o.getClientIp() != null).uid("3. filter null data").name("3. filter null data");
 
-        DataStream<WC> source2 = filterData.keyBy(new VirtualHighKeySelector()).window(SlidingProcessingTimeWindows.of(Time.seconds(10), Time.seconds(30))).apply((new CounterWindow())).name("4. sum data by client ip");
+        DataStream<WC> source2 = filterData.keyBy(new VirtualHighKeySelector()).window(TumblingProcessingTimeWindows.of(Time.seconds(60))).apply((new CounterWindow())).name("4. sum data by client ip");
         source2.addSink(new SinkConsole()).name("5. sink to console");
         env.execute((new JobConf(args)).getJobName());
     }
@@ -87,8 +87,8 @@ public class VirtualHighMonitorJob {
         @Override
         public String toString() {
             return "WC{" +
-                    "f0=" + f0 +
-                    ", f1=" + f1 +
+                    "clientIp='" + getClientIp() + '\'' +
+                    ", cnt=" + getCnt() +
                     '}';
         }
     }
