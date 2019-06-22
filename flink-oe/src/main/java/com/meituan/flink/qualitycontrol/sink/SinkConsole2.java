@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 import java.util.Date;
 
 /**
+ * 滑动窗口计算
  * @author jingzhongzhi
  * @Description
  * @since 2019/6/22

@@ -15,14 +15,17 @@ public class ItemViewCountDO {
 
     private String windowEnd;
 
+    private Long windowEndTs;
+
     /**  */
     private Long count;
 
-    public static ItemViewCountDO of(String key,String windowStart, String windowEnd, Long count) {
+    public static ItemViewCountDO of(String key,String windowStart, String windowEnd,Long windowEndTs, Long count) {
         ItemViewCountDO itemViewCountDO = new ItemViewCountDO();
         itemViewCountDO.key = key;
         itemViewCountDO.windowStart = windowStart;
         itemViewCountDO.windowEnd = windowEnd;
+        itemViewCountDO.windowEndTs = windowEndTs;
         itemViewCountDO.count = count;
         return itemViewCountDO;
     }
@@ -59,13 +62,21 @@ public class ItemViewCountDO {
         this.count = count;
     }
 
+    public Long getWindowEndTs() {
+        return windowEndTs;
+    }
+
+    public void setWindowEndTs(Long windowEndTs) {
+        this.windowEndTs = windowEndTs;
+    }
+
     @Override
     public String toString() {
         return "{" +
-                "count=" + count +
-                ", key='" + key + '\'' +
-                ", windowEnd=" + windowEnd +
                 ", windowStart=" + windowStart +
+                ", windowEnd=" + windowEnd +
+                ", key='" + key + '\'' +
+                "count=" + count +
                 '}';
     }
 }

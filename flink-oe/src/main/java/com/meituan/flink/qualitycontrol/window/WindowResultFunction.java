@@ -21,7 +21,7 @@ public class WindowResultFunction implements WindowFunction<Long,ItemViewCountDO
         String startTime = DateFormatUtils.format(new Date(start), "yyyy-MM-dd HH:mm:ss");
         long end = window.getEnd();
         String endTime = DateFormatUtils.format(new Date(end), "yyyy-MM-dd HH:mm:ss");
-        ItemViewCountDO viewCountDO = ItemViewCountDO.of(key, startTime, endTime, count);
+        ItemViewCountDO viewCountDO = ItemViewCountDO.of(key, startTime, endTime,end, count);
         out.collect(viewCountDO);
     }
 }
