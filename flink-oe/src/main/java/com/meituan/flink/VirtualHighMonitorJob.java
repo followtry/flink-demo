@@ -1,19 +1,19 @@
 package com.meituan.flink;
 
+import com.alibaba.fastjson.JSON;
 import com.meituan.flink.common.config.JobConf;
 import com.meituan.flink.common.config.KafkaTopic;
 import com.meituan.flink.common.kafka.MTKafkaConsumer08;
 import com.meituan.flink.qualitycontrol.CounterWindow;
 import com.meituan.flink.qualitycontrol.QcJsonDataParse;
 import com.meituan.flink.qualitycontrol.QualityControlResultMq;
+import com.meituan.flink.qualitycontrol.SinkConsole;
 import com.meituan.flink.qualitycontrol.VirtualHighKeySelector;
+import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.streaming.api.datastream.DataStream;
-import org.apache.flink.streaming.api.datastream.KeyedStream;
-import org.apache.flink.streaming.api.datastream.WindowedStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.windowing.assigners.SlidingProcessingTimeWindows;
 import org.apache.flink.streaming.api.windowing.time.Time;
-import org.apache.flink.streaming.api.windowing.windows.TimeWindow;
 import org.apache.flink.streaming.connectors.kafka.FlinkKafkaConsumerBase;
 
 import java.util.Map;
@@ -41,10 +41,56 @@ public class VirtualHighMonitorJob {
         DataStream<QualityControlResultMq> jsonData = source.rebalance().map(new QcJsonDataParse()).uid("2. parse json data").name("2. parse json data");
         DataStream<QualityControlResultMq> filterData = jsonData.filter(o -> o != null && o.getClientIp() != null).uid("3. filter null data").name("3. filter null data");
 
-        KeyedStream<QualityControlResultMq, String> keyedStream = filterData.keyBy(new VirtualHighKeySelector());
-        WindowedStream<QualityControlResultMq, String, TimeWindow> window = keyedStream.window(SlidingProcessingTimeWindows.of(Time.seconds(10), Time.seconds(30)));
-        window.apply((new CounterWindow())).uid("4. sum data by client ip");
-
+        DataStream<WC> source2 = filterData.keyBy(new VirtualHighKeySelector()).window(SlidingProcessingTimeWindows.of(Time.seconds(10), Time.seconds(30))).apply((new CounterWindow())).uid("4. sum data by client ip");
+        source2.map(Tuple2::toString);
+        source2.addSink(new SinkConsole());
         env.execute((new JobConf(args)).getJobName());
+    }
+
+    /**
+     * 将Tuple 替换为 Pojo对象
+     */
+    public static class WC extends Tuple2<String,Integer> {
+
+        /**  */
+        private String clientIp;
+
+        private Integer cnt;
+
+        public WC() {
+            super();
+        }
+
+        public WC(String word, Integer count) {
+            super(word, count);
+            this.clientIp = word;
+            this.cnt = count;
+        }
+
+        public String getClientIp() {
+            return getField(0);
+        }
+
+        public Integer getCnt() {
+            return getField(1);
+        }
+
+        public void setClientIp(String clientIp) {
+            this.clientIp = clientIp;
+            setField(clientIp,0);
+        }
+
+        public String toJsonString() {
+            return JSON.toJSONString(this);
+        }
+
+
+        @Override
+        public String toString() {
+            return "WC{" +
+                    "f0=" + f0 +
+                    ", f1=" + f1 +
+                    '}';
+        }
     }
 }
