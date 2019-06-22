@@ -5,7 +5,7 @@ import org.apache.commons.lang.time.DateFormatUtils;
 import org.apache.flink.api.common.state.ListState;
 import org.apache.flink.api.common.state.ListStateDescriptor;
 import org.apache.flink.configuration.Configuration;
-import org.apache.flink.streaming.api.functions.ProcessFunction;
+import org.apache.flink.streaming.api.functions.KeyedProcessFunction;
 import org.apache.flink.util.Collector;
 
 import java.sql.Timestamp;
@@ -20,7 +20,7 @@ import java.util.List;
  * @Description
  * @since 2019/6/22
  */
-public class TopNHotItems2 extends ProcessFunction<ItemViewCountDO,String> {
+public class TopNHotItems2 extends KeyedProcessFunction<String,ItemViewCountDO,String> {
 
     /**  */
     private Integer topSize;
