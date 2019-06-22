@@ -59,6 +59,10 @@ public class TopNHotItems extends KeyedProcessFunction<Tuple,ItemViewCountDO,Str
         StringBuilder result = new StringBuilder();
         result.append("====================================\n");
         result.append("时间: ").append(new Timestamp(timestamp-1)).append("\n");
+        //避免产品数量不够导致 NPE 的异常
+        if (allItems.size() < topSize) {
+            topSize = allItems.size();
+        }
         for (int i=0;i<topSize;i++) {
             ItemViewCountDO currentItem = allItems.get(i);
             // No1:  商品ID=12224  浏览量=2413
