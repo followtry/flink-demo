@@ -20,7 +20,7 @@ public class SinkConsole implements SinkFunction<VirtualHighMonitorJob.WC> {
     public void invoke(VirtualHighMonitorJob.WC value, Context context) {
         System.out.println("=========计算结果: key="+value.getClientIp()+",cnt="+value.getCnt()+"===========");
         log.info("=========计算结果: key="+value.getClientIp()+",cnt="+value.getCnt()+"===========");
-        String formatTime = DateFormatUtils.format(new Date(context.currentProcessingTime()), "YYYYMMDD HH:mm:ss");
+        String formatTime = DateFormatUtils.format(new Date(context.currentProcessingTime()), "yyyy-MM-dd HH:mm:ss");
         FbNxPublisherUtils.sendText("Flink 任务_时间("+formatTime+")",value.toJsonString(),"jingzhongzhi");
     }
 }
