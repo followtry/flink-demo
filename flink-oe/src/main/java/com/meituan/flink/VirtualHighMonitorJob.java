@@ -5,13 +5,12 @@ import com.meituan.flink.common.config.JobConf;
 import com.meituan.flink.common.config.KafkaTopic;
 import com.meituan.flink.common.kafka.MTKafkaConsumer08;
 import com.meituan.flink.qualitycontrol.CounterPoiAggrateFunction;
-import com.meituan.flink.qualitycontrol.custom.TopNHotItems;
 import com.meituan.flink.qualitycontrol.dto.GcResult;
 import com.meituan.flink.qualitycontrol.dto.ItemViewCountDO;
 import com.meituan.flink.qualitycontrol.dto.QualityControlResultMq;
 import com.meituan.flink.qualitycontrol.key.PoiIdSelector;
 import com.meituan.flink.qualitycontrol.parse.QcJsonDataParse;
-import com.meituan.flink.qualitycontrol.sink.SinkConsole3;
+import com.meituan.flink.qualitycontrol.sink.SinkConsole2;
 import com.meituan.flink.qualitycontrol.window.WindowResultFunction;
 import org.apache.flink.api.common.functions.FlatMapFunction;
 import org.apache.flink.api.java.tuple.Tuple2;
@@ -71,10 +70,10 @@ public class VirtualHighMonitorJob {
                 .timeWindow(Time.minutes(5), Time.minutes(1))
                 .aggregate(new CounterPoiAggrateFunction(),new WindowResultFunction()).name("4. aggregate data by poiId");
         //参考文章： https://yq.aliyun.com/articles/706029
-        DataStream<String> processData = windowdData
-                .keyBy("windowEndTs")
-                .process(new TopNHotItems(5)).name("5. process top N");
-        processData.addSink(new SinkConsole3()).setParallelism(1).name("6. sink to console");
+//        DataStream<String> processData = windowdData
+//                .keyBy("windowEndTs")
+//                .process(new TopNHotItems(5)).name("5. process top N");
+        windowdData.addSink(new SinkConsole2()).setParallelism(1).name("6. sink to console");
         env.execute((new JobConf(args)).getJobName());
     }
 

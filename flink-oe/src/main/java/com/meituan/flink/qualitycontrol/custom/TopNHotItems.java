@@ -48,6 +48,7 @@ public class TopNHotItems extends KeyedProcessFunction<Tuple,ItemViewCountDO,Str
         for (ItemViewCountDO item : itemState.get()) {
             allItems.add(item);
         }
+
         // 提前清除状态中的数据，释放空间
         itemState.clear();
         // 按照点击量从大到小排序
