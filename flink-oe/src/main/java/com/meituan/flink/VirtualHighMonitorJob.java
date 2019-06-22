@@ -9,7 +9,6 @@ import com.meituan.flink.qualitycontrol.custom.TopNHotItems;
 import com.meituan.flink.qualitycontrol.dto.GcResult;
 import com.meituan.flink.qualitycontrol.dto.ItemViewCountDO;
 import com.meituan.flink.qualitycontrol.dto.QualityControlResultMq;
-import com.meituan.flink.qualitycontrol.key.EndTimeSelector;
 import com.meituan.flink.qualitycontrol.key.PoiIdSelector;
 import com.meituan.flink.qualitycontrol.parse.QcJsonDataParse;
 import com.meituan.flink.qualitycontrol.sink.SinkConsole3;
@@ -72,7 +71,9 @@ public class VirtualHighMonitorJob {
                 .timeWindow(Time.minutes(5), Time.minutes(1))
                 .aggregate(new CounterPoiAggrateFunction(),new WindowResultFunction()).name("4. aggregate data by poiId");
         //参考文章： https://yq.aliyun.com/articles/706029
-        DataStream<String> processData = windowdData.keyBy("windowEndTs").process(new TopNHotItems(5)).name("5. process top N");
+        DataStream<String> processData = windowdData
+                .keyBy("windowEndTs")
+                .process(new TopNHotItems(5)).name("5. process top N");
         processData.addSink(new SinkConsole3()).setParallelism(1).name("6. sink to console");
         env.execute((new JobConf(args)).getJobName());
     }

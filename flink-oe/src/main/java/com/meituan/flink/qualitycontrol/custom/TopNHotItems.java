@@ -27,7 +27,7 @@ public class TopNHotItems extends KeyedProcessFunction<Tuple,ItemViewCountDO,Str
     private Integer topSize;
 
     // 用于存储商品与点击数的状态，待收齐同一个窗口的数据后，再触发 TopN 计算
-    private ListState<ItemViewCountDO> itemState;
+    private static ListState<ItemViewCountDO> itemState;
 
     public TopNHotItems(Integer topSize) {
         this.topSize = topSize;
