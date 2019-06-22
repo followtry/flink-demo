@@ -4,11 +4,13 @@ import com.alibaba.fastjson.JSON;
 import com.meituan.flink.common.config.JobConf;
 import com.meituan.flink.common.config.KafkaTopic;
 import com.meituan.flink.common.kafka.MTKafkaConsumer08;
-import com.meituan.flink.qualitycontrol.CounterWindow;
-import com.meituan.flink.qualitycontrol.QcJsonDataParse;
-import com.meituan.flink.qualitycontrol.QualityControlResultMq;
-import com.meituan.flink.qualitycontrol.SinkConsole;
-import com.meituan.flink.qualitycontrol.VirtualHighKeySelector;
+import com.meituan.flink.qualitycontrol.CounterAggrateFunction;
+import com.meituan.flink.qualitycontrol.dto.ItemViewCountDO;
+import com.meituan.flink.qualitycontrol.dto.QualityControlResultMq;
+import com.meituan.flink.qualitycontrol.key.VirtualHighKeySelector;
+import com.meituan.flink.qualitycontrol.parse.QcJsonDataParse;
+import com.meituan.flink.qualitycontrol.sink.SinkConsole2;
+import com.meituan.flink.qualitycontrol.window.WindowResultFunction;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
@@ -42,8 +44,10 @@ public class VirtualHighMonitorJob {
         DataStream<QualityControlResultMq> filterData = jsonData.filter(o -> o != null && o.getClientAppKey() != null).uid("3. filter null data").name("3. filter null data");
 
         //使用 apply 的方式计算总数，是在窗口最后才计算，存储的是明细数据
-        DataStream<WC> source2 = filterData.keyBy(new VirtualHighKeySelector()).window(SlidingProcessingTimeWindows.of(Time.seconds(60), Time.seconds(5))).apply((new CounterWindow())).name("4. sum data by client appkey");
-        source2.addSink(new SinkConsole()).name("5. sink to console");
+        DataStream<ItemViewCountDO> source2 = filterData.keyBy(new VirtualHighKeySelector())
+                .window(SlidingProcessingTimeWindows.of(Time.seconds(10), Time.seconds(1)))
+                .aggregate(new CounterAggrateFunction(),new WindowResultFunction()).name("4. sum data by client appkey");
+        source2.addSink(new SinkConsole2()).name("5. sink to console");
         env.execute((new JobConf(args)).getJobName());
     }
 

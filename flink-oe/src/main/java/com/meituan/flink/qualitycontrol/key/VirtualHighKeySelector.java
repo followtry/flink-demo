@@ -1,5 +1,6 @@
-package com.meituan.flink.qualitycontrol;
+package com.meituan.flink.qualitycontrol.key;
 
+import com.meituan.flink.qualitycontrol.dto.QualityControlResultMq;
 import org.apache.flink.api.java.functions.KeySelector;
 
 /**

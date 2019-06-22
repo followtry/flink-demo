@@ -1,4 +1,4 @@
-package com.meituan.flink.qualitycontrol;
+package com.meituan.flink.qualitycontrol.sink;
 
 import com.meituan.flink.VirtualHighMonitorJob;
 import com.meituan.flink.utils.FbNxPublisherUtils;

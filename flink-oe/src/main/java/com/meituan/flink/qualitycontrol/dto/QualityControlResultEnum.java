@@ -1,4 +1,4 @@
-package com.meituan.flink.qualitycontrol;
+package com.meituan.flink.qualitycontrol.dto;
 
 /**
  * @author jingzhongzhi

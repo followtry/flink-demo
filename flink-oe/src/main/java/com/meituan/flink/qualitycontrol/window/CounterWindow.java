@@ -1,6 +1,7 @@
-package com.meituan.flink.qualitycontrol;
+package com.meituan.flink.qualitycontrol.window;
 
 import com.meituan.flink.VirtualHighMonitorJob;
+import com.meituan.flink.qualitycontrol.dto.QualityControlResultMq;
 import org.apache.flink.streaming.api.functions.windowing.WindowFunction;
 import org.apache.flink.streaming.api.windowing.windows.TimeWindow;
 import org.apache.flink.util.Collector;

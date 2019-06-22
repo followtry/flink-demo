@@ -1,4 +1,4 @@
-package com.meituan.flink.qualitycontrol;
+package com.meituan.flink.qualitycontrol.dto;
 
 import com.alibaba.fastjson.annotation.JSONField;
 

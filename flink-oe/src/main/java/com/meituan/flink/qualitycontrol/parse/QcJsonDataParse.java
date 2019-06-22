@@ -1,6 +1,7 @@
-package com.meituan.flink.qualitycontrol;
+package com.meituan.flink.qualitycontrol.parse;
 
 import com.alibaba.fastjson.JSONObject;
+import com.meituan.flink.qualitycontrol.dto.QualityControlResultMq;
 import com.meituan.flink.utils.JsonParseHelper;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.flink.api.common.functions.MapFunction;
