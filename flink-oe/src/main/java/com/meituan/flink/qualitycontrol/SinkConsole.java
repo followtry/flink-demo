@@ -21,6 +21,6 @@ public class SinkConsole implements SinkFunction<VirtualHighMonitorJob.WC> {
         System.out.println("=========计算结果: key="+value.getClientIp()+",cnt="+value.getCnt()+"===========");
         log.info("=========计算结果: key="+value.getClientIp()+",cnt="+value.getCnt()+"===========");
         String formatTime = DateFormatUtils.format(new Date(context.currentProcessingTime()), "yyyy-MM-dd HH:mm:ss");
-        FbNxPublisherUtils.sendText("Flink 任务_时间("+formatTime+")",value.toJsonString(),"jingzhongzhi");
+        FbNxPublisherUtils.sendText("Flink 任务_时间("+formatTime+")",value.toString(),"jingzhongzhi");
     }
 }
