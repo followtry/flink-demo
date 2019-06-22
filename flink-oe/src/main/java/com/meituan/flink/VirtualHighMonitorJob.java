@@ -43,7 +43,7 @@ public class VirtualHighMonitorJob {
         DataStream<QualityControlResultMq> jsonData = source.rebalance().map(new QcJsonDataParse()).name("2. parse json data");
         DataStream<QualityControlResultMq> filterData = jsonData.filter(o -> o != null && o.getClientAppKey() != null).uid("3. filter null data").name("3. filter null data");
 
-        //使用 apply 的方式计算总数，是在窗口最后才计算，存储的是明细数据
+        //使用 aggregate 的方式先预聚合计算，内存中存的聚合后的数据非明细数据
         DataStream<ItemViewCountDO> source2 = filterData.keyBy(new VirtualHighKeySelector())
                 .window(SlidingProcessingTimeWindows.of(Time.minutes(10), Time.minutes(1)))
                 .aggregate(new CounterAggrateFunction(),new WindowResultFunction()).name("4. aggregate data by client appkey");
