@@ -43,7 +43,7 @@ public class VirtualHighMonitorJob {
         consumer08.build(new org.apache.flink.api.common.serialization.SimpleStringSchema());
         Map.Entry<KafkaTopic, FlinkKafkaConsumerBase> consumerBaseEntry = consumer08.getConsumerByName("app.mafka.hotel.oe.qualitycontrol.virtualhigh", "rz_kafka08-default");
 
-        DataStream source = env.addSource(consumerBaseEntry.getValue()).name("1. src_topic_name");
+        DataStream source = env.addSource(consumerBaseEntry.getValue()).name("1. src_topic_name").setParallelism(1);
 
         DataStream<QualityControlResultMq> jsonData = source.rebalance().map(new QcJsonDataParse()).name("2. parse json data");
         DataStream<QualityControlResultMq> filterData = jsonData.filter(o -> o != null && o.getClientAppKey() != null).uid("3. filter null data").name("3. filter null data");
@@ -69,11 +69,11 @@ public class VirtualHighMonitorJob {
 
         //使用 aggregate 的方式先预聚合计算，内存中存的聚合后的数据非明细数据
         DataStream<ItemViewCountDO> windowdData = timedData.keyBy(new PoiIdSelector())
-                .window(SlidingProcessingTimeWindows.of(Time.minutes(3), Time.seconds(30)))
-                .aggregate(new CounterPoiAggrateFunction(),new WindowResultFunction()).name("4. aggregate data by client appkey");
+                .window(SlidingProcessingTimeWindows.of(Time.minutes(5), Time.seconds(1)))
+                .aggregate(new CounterPoiAggrateFunction(),new WindowResultFunction()).name("4. aggregate data by poiId");
         //参考文章： https://yq.aliyun.com/articles/706029
         DataStream<String> processData = windowdData.keyBy("windowEnd").process(new TopNHotItems(5)).name("5. process top N");
-        processData.addSink(new SinkConsole3()).name("6. sink to console");
+        processData.addSink(new SinkConsole3()).setParallelism(1).name("6. sink to console");
         env.execute((new JobConf(args)).getJobName());
     }
 

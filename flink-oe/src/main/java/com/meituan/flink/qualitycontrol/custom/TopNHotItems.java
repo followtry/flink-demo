@@ -69,6 +69,8 @@ public class TopNHotItems extends KeyedProcessFunction<Tuple,ItemViewCountDO,Str
             result.append("No").append(i).append(":")
                     .append("  商品ID=").append(currentItem.getKey())
                     .append("  浏览量=").append(currentItem.getCount())
+                    .append("  winStart=").append(currentItem.getWindowStart())
+                    .append("  winEnd=").append(currentItem.getWindowEnd())
                     .append("\n");
         }
         result.append("====================================\n\n");
