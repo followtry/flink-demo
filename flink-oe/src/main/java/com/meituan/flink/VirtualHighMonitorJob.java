@@ -42,7 +42,7 @@ public class VirtualHighMonitorJob {
         DataStream<QualityControlResultMq> filterData = jsonData.filter(o -> o != null && o.getClientIp() != null).uid("3. filter null data").name("3. filter null data");
 
         DataStream<WC> source2 = filterData.keyBy(new VirtualHighKeySelector()).window(SlidingProcessingTimeWindows.of(Time.seconds(10), Time.seconds(30))).apply((new CounterWindow())).name("4. sum data by client ip");
-        source2.addSink(new SinkConsole()).name("sink to console");
+        source2.addSink(new SinkConsole()).name("5. sink to console");
         env.execute((new JobConf(args)).getJobName());
     }
 
