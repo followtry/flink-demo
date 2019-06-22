@@ -2,7 +2,7 @@ package com.meituan.flink.qualitycontrol.window;
 
 import com.meituan.flink.qualitycontrol.dto.ItemViewCountDO;
 import org.apache.commons.lang3.time.DateFormatUtils;
-import org.apache.flink.streaming.api.functions.windowing.WindowFunction;
+import org.apache.flink.streaming.api.functions.windowing.RichWindowFunction;
 import org.apache.flink.streaming.api.windowing.windows.TimeWindow;
 import org.apache.flink.util.Collector;
 
@@ -13,7 +13,7 @@ import java.util.Date;
  * @Description
  * @since 2019/6/22
  */
-public class WindowResultFunction implements WindowFunction<Long,ItemViewCountDO, String, TimeWindow>{
+public class WindowResultFunction extends RichWindowFunction<Long,ItemViewCountDO, String, TimeWindow> {
     @Override
     public void apply(String key, TimeWindow window, Iterable<Long> input, Collector<ItemViewCountDO> out) throws Exception {
         Long count = input.iterator().next();
