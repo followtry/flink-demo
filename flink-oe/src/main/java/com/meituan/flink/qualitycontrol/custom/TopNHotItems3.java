@@ -5,10 +5,11 @@ import org.apache.commons.lang.time.DateFormatUtils;
 import org.apache.flink.api.common.state.ListState;
 import org.apache.flink.api.common.state.ListStateDescriptor;
 import org.apache.flink.configuration.Configuration;
-import org.apache.flink.streaming.api.functions.KeyedProcessFunction;
+import org.apache.flink.streaming.api.scala.function.ProcessWindowFunction;
+import org.apache.flink.streaming.api.windowing.windows.TimeWindow;
 import org.apache.flink.util.Collector;
+import scala.collection.Iterable;
 
-import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;
@@ -20,7 +21,7 @@ import java.util.List;
  * @Description
  * @since 2019/6/22
  */
-public class TopNHotItems2 extends KeyedProcessFunction<String,ItemViewCountDO,List<ItemViewCountDO>> {
+public class TopNHotItems3 extends ProcessWindowFunction<ItemViewCountDO, String, String, TimeWindow> {
 
     /**  */
     private Integer topSize;
@@ -28,7 +29,7 @@ public class TopNHotItems2 extends KeyedProcessFunction<String,ItemViewCountDO,L
     // 用于存储商品与点击数的状态，待收齐同一个窗口的数据后，再触发 TopN 计算
     private static ListState<ItemViewCountDO> itemState;
 
-    public TopNHotItems2(Integer topSize) {
+    public TopNHotItems3(Integer topSize) {
         this.topSize = topSize;
     }
 
@@ -41,7 +42,7 @@ public class TopNHotItems2 extends KeyedProcessFunction<String,ItemViewCountDO,L
     }
 
     @Override
-    public void onTimer(long timestamp, OnTimerContext ctx, Collector<List<ItemViewCountDO>> out) throws Exception {
+    public void process(String key, Context context, Iterable<ItemViewCountDO> elements, Collector<String> out) throws Exception {
         // 获取收到的所有商品点击量
         List<ItemViewCountDO> allItems = new ArrayList<>();
         for (ItemViewCountDO item : itemState.get()) {
@@ -61,26 +62,24 @@ public class TopNHotItems2 extends KeyedProcessFunction<String,ItemViewCountDO,L
         StringBuilder result = new StringBuilder();
         String now = DateFormatUtils.format(new Date(), "yyyy-MM-dd HH:mm:ss");
         result.append("==========当前时间:").append(now).append("==========================\n");
-        result.append("时间: ").append(new Timestamp(timestamp-1)).append("\n");
         //避免产品数量不够导致 NPE 的异常
         if (allItems.size() < topSize) {
             topSize = allItems.size();
         }
-        List<ItemViewCountDO> results = new ArrayList<>();
         for (int i=0;i<topSize;i++) {
             ItemViewCountDO currentItem = allItems.get(i);
-            results.add(currentItem);
+            // No1:  商品ID=12224  浏览量=2413
+            result.append("No").append(i).append(":")
+                    .append("  商品ID=").append(currentItem.getKey())
+                    .append("  浏览量=").append(currentItem.getCount())
+                    .append("  winStart=").append(currentItem.getWindowStart())
+                    .append("  winEnd=").append(currentItem.getWindowEnd())
+                    .append("\n");
         }
         result.append("====================================\n\n");
         Thread.sleep(1000);
-        out.collect(results);
-    }
-
-    @Override
-    public void processElement(ItemViewCountDO value, Context ctx, Collector<List<ItemViewCountDO>> out) throws Exception {
-        // 每条数据都保存到状态中
-        itemState.add(value);
-        // 注册 windowEnd+1 的 EventTime Timer, 当触发时，说明收齐了属于windowEnd窗口的所有商品数据
-        ctx.timerService().registerProcessingTimeTimer(value.getWindowEndTs() + 1);
+        out.collect(result.toString());
     }
 }
+
+
