@@ -74,7 +74,7 @@ public class TopNHotItems extends KeyedProcessFunction<Tuple,ItemViewCountDO,Str
                     .append("\n");
         }
         result.append("====================================\n\n");
-
+        Thread.sleep(1000);
         out.collect(result.toString());
     }
 
