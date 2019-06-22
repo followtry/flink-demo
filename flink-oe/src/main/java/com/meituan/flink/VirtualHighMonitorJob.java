@@ -5,6 +5,7 @@ import com.meituan.flink.common.config.JobConf;
 import com.meituan.flink.common.config.KafkaTopic;
 import com.meituan.flink.common.kafka.MTKafkaConsumer08;
 import com.meituan.flink.qualitycontrol.CounterPoiAggrateFunction;
+import com.meituan.flink.qualitycontrol.custom.TopNHotItems2;
 import com.meituan.flink.qualitycontrol.dto.GcResult;
 import com.meituan.flink.qualitycontrol.dto.ItemViewCountDO;
 import com.meituan.flink.qualitycontrol.dto.QualityControlResultMq;
@@ -70,7 +71,7 @@ public class VirtualHighMonitorJob {
                 .timeWindow(Time.minutes(5), Time.minutes(1))
                 .aggregate(new CounterPoiAggrateFunction(),new WindowResultFunction()).name("4. aggregate data by poiId");
         //参考文章： https://yq.aliyun.com/articles/706029
-//        DataStream<String> processData = windowdData
+        DataStream<String> processData = windowdData.process(new TopNHotItems2(5)).name("5. process top N");
 //                .keyBy("windowEndTs")
 //                .process(new TopNHotItems(5)).name("5. process top N");
         windowdData.addSink(new SinkConsole2()).setParallelism(1).name("6. sink to console");
