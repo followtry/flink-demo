@@ -17,6 +17,7 @@ import org.apache.flink.api.common.functions.FlatMapFunction;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
+import org.apache.flink.streaming.api.functions.timestamps.BoundedOutOfOrdernessTimestampExtractor;
 import org.apache.flink.streaming.api.windowing.assigners.SlidingProcessingTimeWindows;
 import org.apache.flink.streaming.api.windowing.time.Time;
 import org.apache.flink.streaming.connectors.kafka.FlinkKafkaConsumerBase;
@@ -58,9 +59,17 @@ public class VirtualHighMonitorJob {
             }
         });
 
+        //增加水印
+        DataStream<GcResult> timedData = flatData.assignTimestampsAndWatermarks(new BoundedOutOfOrdernessTimestampExtractor<GcResult>() {
+            @Override
+            public long extractTimestamp(GcResult element) {
+                return System.currentTimeMillis();
+            }
+        }).name("3.1 watermarks assign");
+
         //使用 aggregate 的方式先预聚合计算，内存中存的聚合后的数据非明细数据
-        DataStream<ItemViewCountDO> windowdData = flatData.keyBy(new PoiIdSelector())
-                .window(SlidingProcessingTimeWindows.of(Time.minutes(30), Time.minutes(1)))
+        DataStream<ItemViewCountDO> windowdData = timedData.keyBy(new PoiIdSelector())
+                .window(SlidingProcessingTimeWindows.of(Time.minutes(3), Time.seconds(30)))
                 .aggregate(new CounterPoiAggrateFunction(),new WindowResultFunction()).name("4. aggregate data by client appkey");
         //参考文章： https://yq.aliyun.com/articles/706029
         DataStream<String> processData = windowdData.keyBy("windowEnd").process(new TopNHotItems(5)).name("5. process top N");

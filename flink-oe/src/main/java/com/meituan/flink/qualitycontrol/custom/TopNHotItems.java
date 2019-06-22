@@ -77,6 +77,6 @@ public class TopNHotItems extends KeyedProcessFunction<Tuple,ItemViewCountDO,Str
         // 每条数据都保存到状态中
         itemState.add(value);
         // 注册 windowEnd+1 的 EventTime Timer, 当触发时，说明收齐了属于windowEnd窗口的所有商品数据
-        ctx.timerService().registerEventTimeTimer(value.getWindowEndTs() + 1);
+        ctx.timerService().registerProcessingTimeTimer(value.getWindowEndTs() + 1);
     }
 }
