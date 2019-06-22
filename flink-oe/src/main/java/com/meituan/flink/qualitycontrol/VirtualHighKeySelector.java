@@ -11,6 +11,6 @@ public class VirtualHighKeySelector implements KeySelector<QualityControlResultM
 
     @Override
     public String getKey(QualityControlResultMq value) throws Exception {
-        return value.getClientIp();
+        return value.getClientAppKey();
     }
 }
