@@ -74,10 +74,3 @@ buildNumber.properties
 .idea/markdown-navigator/
 .idea/misc.xml
 .idea/workspace.xml
-pom.xml
-src/main/java/com/meituan/flink/FlinkKafkaDemo.java
-src/main/java/com/meituan/flink/FlinkKafkaSimpleDemo.java
-src/main/java/com/meituan/flink/OrderAmountDemo.java
-src/main/java/com/meituan/flink/ParseBinlogDemo.java
-src/main/java/com/meituan/flink/func/
-src/main/java/com/meituan/flink/utils/
