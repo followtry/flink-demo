@@ -1,8 +1,7 @@
 package com.meituan.flink.qualitycontrol;
 
 import com.alibaba.fastjson.JSONObject;
-import com.meituan.hotel.oe.flink.util.JsonParseHelper;
-import com.meituan.mafka.client.utils.DateUtils;
+import com.meituan.flink.utils.JsonParseHelper;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.flink.api.common.functions.MapFunction;
 
@@ -21,15 +20,15 @@ public class QcJsonDataParse implements MapFunction<String, QualityControlResult
         String jsonString = JsonParseHelper.pureJsonString(s);
         Date now = new Date();
         if (!StringUtils.startsWith(jsonString, "{") || !StringUtils.endsWith(jsonString, "}")) {
-            System.out.println("time:"+ DateUtils.formatSS(now) +" json error: " + jsonString);
+            System.out.println("time:"+ now +" json error: " + jsonString);
         }
         try {
             QualityControlResultMq mq = JSONObject.parseObject(jsonString, QualityControlResultMq.class);
             return mq;
         } catch (Exception e) {
-            System.out.println("time:"+ DateUtils.formatSS(now) +" parse json error: " + e);
-            System.out.println("time:"+ DateUtils.formatSS(now) +" parse json input: " + jsonString);
-            System.out.println("time:"+ DateUtils.formatSS(now) +" origin json input: " + s);
+            System.out.println("time:"+ now +" parse json error: " + e);
+            System.out.println("time:"+ now +" parse json input: " + jsonString);
+            System.out.println("time:"+ now +" origin json input: " + s);
         }
         return new QualityControlResultMq();
     }
