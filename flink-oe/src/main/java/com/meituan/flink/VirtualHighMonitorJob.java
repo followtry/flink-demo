@@ -60,7 +60,7 @@ public class VirtualHighMonitorJob {
         });
 
         //增加水印
-        DataStream<GcResult> timedData = flatData.assignTimestampsAndWatermarks(new BoundedOutOfOrdernessTimestampExtractor<GcResult>() {
+        DataStream<GcResult> timedData = flatData.assignTimestampsAndWatermarks(new BoundedOutOfOrdernessTimestampExtractor<GcResult>(Time.seconds(10)) {
             @Override
             public long extractTimestamp(GcResult element) {
                 return System.currentTimeMillis();
