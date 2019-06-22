@@ -1,0 +1,83 @@
+# Created by .ignore support plugin (hsz.mobi)
+### Go template
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test binary, build with `go test -c`
+*.test
+
+# Output of the go coverage tool, specifically when used with LiteIDE
+*.out
+### Example user template template
+### Example user template
+
+# IntelliJ project files
+.idea
+*.iml
+out
+gen### Java template
+# Compiled class file
+*.class
+
+# Log file
+*.log
+
+# BlueJ files
+*.ctxt
+
+# Mobile Tools for Java (J2ME)
+.mtj.tmp/
+
+# Package Files #
+*.jar
+*.war
+*.nar
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+# virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
+hs_err_pid*
+### Kotlin template
+# Compiled class file
+
+# Log file
+
+# BlueJ files
+
+# Mobile Tools for Java (J2ME)
+
+# Package Files #
+
+# virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
+### Maven template
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+
+# Avoid ignoring Maven wrapper jar file (.jar files are usually ignored)
+!/.mvn/wrapper/maven-wrapper.jar
+.idea/.name
+.idea/compiler.xml
+.idea/inspectionProfiles/
+.idea/markdown-navigator/
+.idea/misc.xml
+.idea/workspace.xml
+pom.xml
+src/main/java/com/meituan/flink/FlinkKafkaDemo.java
+src/main/java/com/meituan/flink/FlinkKafkaSimpleDemo.java
+src/main/java/com/meituan/flink/OrderAmountDemo.java
+src/main/java/com/meituan/flink/ParseBinlogDemo.java
+src/main/java/com/meituan/flink/func/
+src/main/java/com/meituan/flink/utils/
