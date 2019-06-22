@@ -46,7 +46,7 @@ public class VirtualHighMonitorJob {
         //使用 apply 的方式计算总数，是在窗口最后才计算，存储的是明细数据
         DataStream<ItemViewCountDO> source2 = filterData.keyBy(new VirtualHighKeySelector())
                 .window(SlidingProcessingTimeWindows.of(Time.seconds(10), Time.seconds(1)))
-                .aggregate(new CounterAggrateFunction(),new WindowResultFunction()).name("4. sum data by client appkey");
+                .aggregate(new CounterAggrateFunction(),new WindowResultFunction()).name("4. aggregate data by client appkey");
         source2.addSink(new SinkConsole2()).name("5. sink to console");
         env.execute((new JobConf(args)).getJobName());
     }

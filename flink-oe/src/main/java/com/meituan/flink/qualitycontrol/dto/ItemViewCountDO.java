@@ -11,14 +11,14 @@ public class ItemViewCountDO {
     private String key;
 
     /**  */
-    private Long windowStart;
+    private String windowStart;
 
-    private Long windowEnd;
+    private String windowEnd;
 
     /**  */
     private Long count;
 
-    public static ItemViewCountDO of(String key,Long windowStart, Long windowEnd, Long count) {
+    public static ItemViewCountDO of(String key,String windowStart, String windowEnd, Long count) {
         ItemViewCountDO itemViewCountDO = new ItemViewCountDO();
         itemViewCountDO.key = key;
         itemViewCountDO.windowStart = windowStart;
@@ -35,19 +35,19 @@ public class ItemViewCountDO {
         this.key = key;
     }
 
-    public Long getWindowStart() {
+    public String getWindowStart() {
         return windowStart;
     }
 
-    public void setWindowStart(Long windowStart) {
+    public void setWindowStart(String windowStart) {
         this.windowStart = windowStart;
     }
 
-    public Long getWindowEnd() {
+    public String getWindowEnd() {
         return windowEnd;
     }
 
-    public void setWindowEnd(Long windowEnd) {
+    public void setWindowEnd(String windowEnd) {
         this.windowEnd = windowEnd;
     }
 
