@@ -39,7 +39,7 @@ public class VirtualHighMonitorJob {
 
 
         DataStream<QualityControlResultMq> jsonData = source.rebalance().map(new QcJsonDataParse()).name("2. parse json data");
-        DataStream<QualityControlResultMq> filterData = jsonData.filter(o -> o != null && o.getClientIp() != null).uid("3. filter null data").name("3. filter null data");
+        DataStream<QualityControlResultMq> filterData = jsonData.filter(o -> o != null && o.getClientAppKey() != null).uid("3. filter null data").name("3. filter null data");
 
         DataStream<WC> source2 = filterData.keyBy(new VirtualHighKeySelector()).window(TumblingProcessingTimeWindows.of(Time.seconds(60))).apply((new CounterWindow())).name("4. sum data by client appkey");
         source2.addSink(new SinkConsole()).name("5. sink to console");
@@ -52,7 +52,7 @@ public class VirtualHighMonitorJob {
     public static class WC extends Tuple2<String,Integer> {
 
         /**  */
-        private String clientIp;
+        private String clientAppkey;
 
         private Integer cnt;
 
@@ -62,11 +62,11 @@ public class VirtualHighMonitorJob {
 
         public WC(String word, Integer count) {
             super(word, count);
-            this.clientIp = word;
+            this.clientAppkey = word;
             this.cnt = count;
         }
 
-        public String getClientIp() {
+        public String getClientAppkey() {
             return getField(0);
         }
 
@@ -74,9 +74,9 @@ public class VirtualHighMonitorJob {
             return getField(1);
         }
 
-        public void setClientIp(String clientIp) {
-            this.clientIp = clientIp;
-            setField(clientIp,0);
+        public void setClientAppkey(String clientAppkey) {
+            this.clientAppkey = clientAppkey;
+            setField(clientAppkey,0);
         }
 
         public String toJsonString() {
@@ -87,7 +87,7 @@ public class VirtualHighMonitorJob {
         @Override
         public String toString() {
             return "WC{" +
-                    "clientIp='" + getClientIp() + '\'' +
+                    "clientAppkey='" + getClientAppkey() + '\'' +
                     ", cnt=" + getCnt() +
                     '}';
         }

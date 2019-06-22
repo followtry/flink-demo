@@ -17,7 +17,7 @@ public class CounterWindow implements WindowFunction<QualityControlResultMq,Virt
     public void apply(String key, TimeWindow timeWindow, Iterable<QualityControlResultMq> iterable, Collector<VirtualHighMonitorJob.WC> collector) throws Exception {
         Integer count =0;
         for (QualityControlResultMq resultMq : iterable) {
-            if (Objects.equals(key, resultMq.getClientIp())) {
+            if (Objects.equals(key, resultMq.getClientAppKey())) {
                 count++;
             }
         }
