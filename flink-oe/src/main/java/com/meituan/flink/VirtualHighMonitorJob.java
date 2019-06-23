@@ -42,6 +42,8 @@ public class VirtualHighMonitorJob {
     public static void main(String[] args) throws Exception {
         //====================获取环境====================
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
+        //开启检查点
+        env.enableCheckpointing(10000);
         //==================================================
 
         //====================添加数据源====================
