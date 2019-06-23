@@ -40,13 +40,18 @@ public class VirtualHighMonitorJob {
      * main.
      */
     public static void main(String[] args) throws Exception {
+        //====================获取环境====================
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
+        //==================================================
+
+        //====================添加数据源====================
         MTKafkaConsumer08 consumer08 = new MTKafkaConsumer08(args);
         consumer08.build(new org.apache.flink.api.common.serialization.SimpleStringSchema());
         Map.Entry<KafkaTopic, FlinkKafkaConsumerBase> consumerBaseEntry = consumer08.getConsumerByName("app.mafka.hotel.oe.qualitycontrol.virtualhigh", "rz_kafka08-default");
 
         DataStream source = env.addSource(consumerBaseEntry.getValue()).name("1. src_topic_name").setParallelism(2);
 
+        //====================解析数据,并进行转换操作====================
         DataStream<QualityControlResultMq> jsonData = source.rebalance().map(new QcJsonDataParse()).name("2. parse json data");
         DataStream<QualityControlResultMq> filterData = jsonData.filter(o -> o != null && o.getClientAppKey() != null).uid("3. filter null data").name("3. filter null data");
 
@@ -59,26 +64,36 @@ public class VirtualHighMonitorJob {
                 }
                 results.forEach(collector::collect);
             }
-        });
+        }).name("3.1flat data");
 
+        //====================指定水印====================
         //增加水印
         DataStream<GcResult> timedData = flatData.assignTimestampsAndWatermarks(new BoundedOutOfOrdernessTimestampExtractor<GcResult>(Time.seconds(1)) {
             @Override
             public long extractTimestamp(GcResult element) {
                 return System.currentTimeMillis();
             }
-        }).name("3.1 watermarks assign");
+        }).name("3.2 watermarks assign");
 
+        //====================预聚合计算====================
         //使用 aggregate 的方式先预聚合计算，内存中存的聚合后的数据非明细数据
         DataStream<ItemViewCountDO> windowdData = timedData.keyBy(new PoiIdSelector())
                 .timeWindow(Time.minutes(5), Time.minutes(1))
                 .aggregate(new CounterPoiAggrateFunction(),new WindowResultFunction()).name("4. aggregate data by poiId");
+
+        //====================求 Sub 的 TopN====================
         //参考文章： https://yq.aliyun.com/articles/706029
         DataStream<List<ItemViewCountDO>> processData = windowdData
                 .keyBy(new EndTimeSelector())
                 .process(new TopNHotItems2(10)).name("5. process sub top N");
+
+        //====================获取最终的 TopN====================
         DataStream<String> allData = processData.windowAll(TumblingProcessingTimeWindows.of(Time.minutes(1))).process(new TopNHotItems4(10)).name("5.1 process all top n");
+
+        //====================sink 到外部====================
         allData.addSink(new SinkConsole3()).setParallelism(2).name("6. sink to console");
+
+        //====================job 执行器====================
         env.execute((new JobConf(args)).getJobName());
     }
 
