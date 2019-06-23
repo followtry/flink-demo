@@ -6,19 +6,21 @@ import com.meituan.flink.common.config.KafkaTopic;
 import com.meituan.flink.common.kafka.MTKafkaConsumer08;
 import com.meituan.flink.qualitycontrol.CounterPoiAggrateFunction;
 import com.meituan.flink.qualitycontrol.custom.TopNHotItems2;
+import com.meituan.flink.qualitycontrol.custom.TopNHotItems4;
 import com.meituan.flink.qualitycontrol.dto.GcResult;
 import com.meituan.flink.qualitycontrol.dto.ItemViewCountDO;
 import com.meituan.flink.qualitycontrol.dto.QualityControlResultMq;
 import com.meituan.flink.qualitycontrol.key.EndTimeSelector;
 import com.meituan.flink.qualitycontrol.key.PoiIdSelector;
 import com.meituan.flink.qualitycontrol.parse.QcJsonDataParse;
-import com.meituan.flink.qualitycontrol.sink.SinkConsole4;
+import com.meituan.flink.qualitycontrol.sink.SinkConsole3;
 import com.meituan.flink.qualitycontrol.window.WindowResultFunction;
 import org.apache.flink.api.common.functions.FlatMapFunction;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.functions.timestamps.BoundedOutOfOrdernessTimestampExtractor;
+import org.apache.flink.streaming.api.windowing.assigners.TumblingProcessingTimeWindows;
 import org.apache.flink.streaming.api.windowing.time.Time;
 import org.apache.flink.streaming.connectors.kafka.FlinkKafkaConsumerBase;
 import org.apache.flink.util.CollectionUtil;
@@ -32,7 +34,7 @@ import java.util.Map;
  * @Description
  * @since 2019/6/22
  */
-public class VirtualHighMonitorJob {
+public class VirtualHighMonitorJob3 {
 
     /**
      * main.
@@ -81,22 +83,17 @@ public class VirtualHighMonitorJob {
                 .timeWindow(Time.minutes(5), Time.minutes(1))
                 .aggregate(new CounterPoiAggrateFunction(),new WindowResultFunction()).name("4. aggregate data by poiId");
 
-        //增加水印
-        DataStream<ItemViewCountDO> timedData2 = windowdData.assignTimestampsAndWatermarks(new BoundedOutOfOrdernessTimestampExtractor<ItemViewCountDO>(Time.seconds(1)) {
-            @Override
-            public long extractTimestamp(ItemViewCountDO element) {
-                return System.currentTimeMillis();
-            }
-        }).name("4.1 watermarks assign");
-
         //====================求 Sub 的 TopN====================
         //参考文章： https://yq.aliyun.com/articles/706029
-        DataStream<List<ItemViewCountDO>> processData = timedData2
+        DataStream<List<ItemViewCountDO>> processData = windowdData
                 .keyBy(new EndTimeSelector())
                 .process(new TopNHotItems2(10)).name("5. process sub top N");
 
+        //====================获取最终的 TopN====================
+        DataStream<String> allData = processData.windowAll(TumblingProcessingTimeWindows.of(Time.minutes(1))).process(new TopNHotItems4(10)).name("5.1 process all top n");
+
         //====================sink 到外部====================
-        processData.addSink(new SinkConsole4()).setParallelism(2).name("6. sink to console");
+        allData.addSink(new SinkConsole3()).setParallelism(2).name("6. sink to console");
 
         //====================job 执行器====================
         env.execute((new JobConf(args)).getJobName());

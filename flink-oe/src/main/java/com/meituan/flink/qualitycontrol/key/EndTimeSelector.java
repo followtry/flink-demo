@@ -12,6 +12,6 @@ public class EndTimeSelector implements KeySelector<ItemViewCountDO,String>{
 
     @Override
     public String getKey(ItemViewCountDO value) throws Exception {
-        return String.valueOf(value.getWindowStart());
+        return String.valueOf(value.getWindowEndTs());
     }
 }
