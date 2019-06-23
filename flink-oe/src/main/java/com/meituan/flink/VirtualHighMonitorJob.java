@@ -4,27 +4,21 @@ import com.alibaba.fastjson.JSON;
 import com.meituan.flink.common.config.JobConf;
 import com.meituan.flink.common.config.KafkaTopic;
 import com.meituan.flink.common.kafka.MTKafkaConsumer08;
-import com.meituan.flink.qualitycontrol.CounterPoiAggrateFunction;
-import com.meituan.flink.qualitycontrol.custom.TopNHotItems2;
-import com.meituan.flink.qualitycontrol.dto.GcResult;
+import com.meituan.flink.qualitycontrol.CounterAggrateFunction;
+import com.meituan.flink.qualitycontrol.custom.TopNHotItems;
 import com.meituan.flink.qualitycontrol.dto.ItemViewCountDO;
 import com.meituan.flink.qualitycontrol.dto.QualityControlResultMq;
-import com.meituan.flink.qualitycontrol.key.EndTimeSelector;
-import com.meituan.flink.qualitycontrol.key.PoiIdSelector;
+import com.meituan.flink.qualitycontrol.key.ClientAppKeySelector;
 import com.meituan.flink.qualitycontrol.parse.QcJsonDataParse;
-import com.meituan.flink.qualitycontrol.sink.SinkConsole4;
+import com.meituan.flink.qualitycontrol.sink.SinkConsole3;
 import com.meituan.flink.qualitycontrol.window.WindowResultFunction;
-import org.apache.flink.api.common.functions.FlatMapFunction;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
-import org.apache.flink.streaming.api.functions.timestamps.BoundedOutOfOrdernessTimestampExtractor;
+import org.apache.flink.streaming.api.windowing.assigners.SlidingProcessingTimeWindows;
 import org.apache.flink.streaming.api.windowing.time.Time;
 import org.apache.flink.streaming.connectors.kafka.FlinkKafkaConsumerBase;
-import org.apache.flink.util.CollectionUtil;
-import org.apache.flink.util.Collector;
 
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -38,67 +32,23 @@ public class VirtualHighMonitorJob {
      * main.
      */
     public static void main(String[] args) throws Exception {
-        //====================获取环境====================
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
-        //开启检查点
-        env.enableCheckpointing(10000);
-        //==================================================
-
-        //====================添加数据源====================
         MTKafkaConsumer08 consumer08 = new MTKafkaConsumer08(args);
         consumer08.build(new org.apache.flink.api.common.serialization.SimpleStringSchema());
         Map.Entry<KafkaTopic, FlinkKafkaConsumerBase> consumerBaseEntry = consumer08.getConsumerByName("app.mafka.hotel.oe.qualitycontrol.virtualhigh", "rz_kafka08-default");
 
-        DataStream source = env.addSource(consumerBaseEntry.getValue()).name("1. src_topic_name").setParallelism(2);
+        DataStream source = env.addSource(consumerBaseEntry.getValue()).name("1. src_topic_name");
 
-        //====================解析数据,并进行转换操作====================
         DataStream<QualityControlResultMq> jsonData = source.rebalance().map(new QcJsonDataParse()).name("2. parse json data");
         DataStream<QualityControlResultMq> filterData = jsonData.filter(o -> o != null && o.getClientAppKey() != null).uid("3. filter null data").name("3. filter null data");
 
-        DataStream<GcResult> flatData = filterData.flatMap(new FlatMapFunction<QualityControlResultMq, GcResult>() {
-            @Override
-            public void flatMap(QualityControlResultMq qualityControlResultMq, Collector<GcResult> collector) throws Exception {
-                List<GcResult> results = qualityControlResultMq.getResults();
-                if (CollectionUtil.isNullOrEmpty(results)) {
-                    return;
-                }
-                results.forEach(collector::collect);
-            }
-        }).name("3.1flat data");
-
-        //====================指定水印====================
-        //增加水印
-        DataStream<GcResult> timedData = flatData.assignTimestampsAndWatermarks(new BoundedOutOfOrdernessTimestampExtractor<GcResult>(Time.seconds(1)) {
-            @Override
-            public long extractTimestamp(GcResult element) {
-                return System.currentTimeMillis();
-            }
-        }).name("3.2 watermarks assign");
-
-        //====================预聚合计算====================
         //使用 aggregate 的方式先预聚合计算，内存中存的聚合后的数据非明细数据
-        DataStream<ItemViewCountDO> windowdData = timedData.keyBy(new PoiIdSelector())
-                .timeWindow(Time.minutes(5), Time.minutes(1))
-                .aggregate(new CounterPoiAggrateFunction(),new WindowResultFunction()).name("4. aggregate data by poiId");
-
-        //增加水印
-        DataStream<ItemViewCountDO> timedData2 = windowdData.assignTimestampsAndWatermarks(new BoundedOutOfOrdernessTimestampExtractor<ItemViewCountDO>(Time.seconds(1)) {
-            @Override
-            public long extractTimestamp(ItemViewCountDO element) {
-                return System.currentTimeMillis();
-            }
-        }).name("4.1 watermarks assign");
-
-        //====================求 Sub 的 TopN====================
+        DataStream<ItemViewCountDO> windowdData = filterData.keyBy(new ClientAppKeySelector())
+                .window(SlidingProcessingTimeWindows.of(Time.minutes(10), Time.minutes(1)))
+                .aggregate(new CounterAggrateFunction(),new WindowResultFunction()).name("4. aggregate data by client appkey");
         //参考文章： https://yq.aliyun.com/articles/706029
-        DataStream<List<ItemViewCountDO>> processData = timedData2
-                .keyBy(new EndTimeSelector())
-                .process(new TopNHotItems2(10)).name("5. process sub top N");
-
-        //====================sink 到外部====================
-        processData.addSink(new SinkConsole4()).setParallelism(2).name("6. sink to console");
-
-        //====================job 执行器====================
+        DataStream<String> processData = windowdData.keyBy("windowEnd").process(new TopNHotItems(5)).name("5. process top N");
+        processData.addSink(new SinkConsole3()).name("6. sink to console");
         env.execute((new JobConf(args)).getJobName());
     }
 
