@@ -3,10 +3,9 @@ package cn.followtry.flink.flinktraining.examples.demo;
 import com.alibaba.fastjson.JSON;
 import org.apache.flink.api.common.functions.FlatMapFunction;
 import org.apache.flink.api.common.serialization.SimpleStringSchema;
-import org.apache.flink.api.java.io.jdbc.JDBCAppendTableSink;
-import org.apache.flink.api.java.io.jdbc.JDBCAppendTableSinkBuilder;
 import org.apache.flink.api.java.tuple.Tuple;
 import org.apache.flink.api.java.tuple.Tuple2;
+import org.apache.flink.api.java.utils.ParameterTool;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.datastream.DataStreamSource;
 import org.apache.flink.streaming.api.datastream.KeyedStream;
@@ -29,49 +28,59 @@ import java.util.Properties;
 public class WordCount {
 
     private static final Logger log = LoggerFactory.getLogger(WordCount.class);
+
+    public static final String ZK_HOSTS = "127.0.0.1:2181,127.0.0.1:2182,127.0.0.1:2183";
     /**
      * main.
      */
     public static void main(String[] args) throws Exception {
 
-        /**
-         * 1. 启动zk
-         * 2. 启动kafka
-         * 3. 在topic=test中写数据，
-         * 4. 在topic=new_data_test中读数据
-         */
-
-        StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
-
-//        DataStream<String> dateSource = env.socketTextStream("localhost", 9999).uid("1. data source");
+        /***===========--------解析参数--------==================*/
+        ParameterTool tool = ParameterTool.fromArgs(args);
+        String brokers = tool.get("brokers");
+        String topic = tool.get("topic");
         Properties properties = new Properties();
-        String brokerServerList = "localhost:9092";
-        String firstTopic = "beam-on-flink";
+        String brokerServerList = brokers ;//"192.168.3.8:9092";
+        String firstTopic = topic; //"beam-on-flink";
         String secondTopic = "beam-on-flink-res";
         properties.setProperty("bootstrap.servers", brokerServerList);
-        properties.setProperty("group.id", firstTopic);
-        FlinkKafkaConsumer011<String> flinkKafkaConsumer011 = new FlinkKafkaConsumer011<>("test", new SimpleStringSchema(), properties);
+        properties.setProperty("group.id", "consumer-flink");
+        properties.setProperty("zookeeper.connect",ZK_HOSTS);
 
+        /***===========--------执行环境--------==================*/
+        StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
+        env.enableCheckpointing(1000);
+
+
+        /***===========--------设置数据源--------==================*/
+        FlinkKafkaConsumer011<String> flinkKafkaConsumer011 = new FlinkKafkaConsumer011<>(firstTopic, new SimpleStringSchema(), properties);
         DataStreamSource<String> source = env.addSource(flinkKafkaConsumer011);
+
+
+        /***===========--------transform--------==================*/
         DataStream<WC> flatMap = source.flatMap(new Splitter()).uid("2. split data");
         KeyedStream<WC, Tuple> keyBy = flatMap.keyBy(0);
         WindowedStream<WC, Tuple, TimeWindow> window = keyBy.timeWindow(Time.seconds(10));
         DataStream<WC> dataStream = window.sum(1).uid("3. sum");
 
         DataStream<String> dateStreamRes = dataStream.map(WC::toString);
+
+        /***===========--------sink to out--------==================*/
         //sink 到 kafka中
         sink2Kafka(brokerServerList, secondTopic, dateStreamRes);
 
-        JDBCAppendTableSinkBuilder jdbcBuilder = new JDBCAppendTableSinkBuilder();
-        JDBCAppendTableSink tableSink = jdbcBuilder.setDBUrl("jdbc:msql")
-                .setDrivername("drivername")
-                .setUsername("")
-                .setPassword("")
-                .setBatchSize(3)
-                .setQuery("insert into test").build();
+//        JDBCAppendTableSinkBuilder jdbcBuilder = new JDBCAppendTableSinkBuilder();
+//        JDBCAppendTableSink tableSink = jdbcBuilder.setDBUrl("jdbc:msql")
+//                .setDrivername("drivername")
+//                .setUsername("")
+//                .setPassword("")
+//                .setBatchSize(3)
+//                .setQuery("insert into test").build();
 
 //        tableSink.emitDataStream(dateStreamRes);
         System.out.println("=========================");
+
+        /***===========--------execute--------==================*/
         env.execute("Window WordCount");
 
     }
@@ -100,6 +109,9 @@ public class WordCount {
         /**  */
         private String word;
 
+        /**  */
+        private Integer count;
+
         public WC() {
             super();
         }
@@ -107,6 +119,7 @@ public class WordCount {
         public WC(String word, Integer count) {
             super(word, count);
             this.word = word;
+            this.count = count;
         }
 
         public String getWord() {
@@ -118,6 +131,15 @@ public class WordCount {
             setField(word,0);
         }
 
+        public Integer getCount() {
+            return getField(1);
+        }
+
+        public void setCount(Integer count) {
+            this.count = count;
+            setField(count,1);
+        }
+
         public String toJsonString() {
             return JSON.toJSONString(this);
         }
@@ -125,10 +147,7 @@ public class WordCount {
 
         @Override
         public String toString() {
-            return "WC{" +
-                    "f0=" + f0 +
-                    ", f1=" + f1 +
-                    '}';
+            return toJsonString();
         }
     }
 }
