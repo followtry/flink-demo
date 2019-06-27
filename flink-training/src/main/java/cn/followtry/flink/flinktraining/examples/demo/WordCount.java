@@ -69,17 +69,6 @@ public class WordCount {
         //sink 到 kafka中
         sink2Kafka(brokerServerList, secondTopic, dateStreamRes);
 
-//        JDBCAppendTableSinkBuilder jdbcBuilder = new JDBCAppendTableSinkBuilder();
-//        JDBCAppendTableSink tableSink = jdbcBuilder.setDBUrl("jdbc:msql")
-//                .setDrivername("drivername")
-//                .setUsername("")
-//                .setPassword("")
-//                .setBatchSize(3)
-//                .setQuery("insert into test").build();
-
-//        tableSink.emitDataStream(dateStreamRes);
-        System.out.println("=========================");
-
         /***===========--------execute--------==================*/
         env.execute("Window WordCount");
 
