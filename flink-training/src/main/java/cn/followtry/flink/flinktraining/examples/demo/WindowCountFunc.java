@@ -17,6 +17,13 @@ import java.util.Objects;
  * @since 2019/6/27
  */
 public class WindowCountFunc extends RichWindowFunction<UserInfo, NameCount, String, TimeWindow> {
+
+    private Boolean showDetail;
+
+    public WindowCountFunc(Boolean showDetail) {
+        this.showDetail = showDetail;
+    }
+
     @Override
     public void apply(String key, TimeWindow timeWindow, Iterable<UserInfo> iterable, Collector<NameCount> collector) throws Exception {
         Integer count =0;
@@ -25,13 +32,15 @@ public class WindowCountFunc extends RichWindowFunction<UserInfo, NameCount, Str
                 count++;
             }
         }
-        List<UserInfo> detailItems = Lists.newArrayList(iterable);
         NameCount nameCount = new NameCount();
         nameCount.setName(key);
         nameCount.setCount(count);
         nameCount.setStartTime(DateFormatUtils.format(timeWindow.getStart(),"yyyy-MM-dd HH:mm:ss"));
         nameCount.setEndTime(DateFormatUtils.format(timeWindow.getEnd(),"yyyy-MM-dd HH:mm:ss"));
-        nameCount.setDetailItems(detailItems);
+        if (showDetail) {
+            List<UserInfo> detailItems = Lists.newArrayList(iterable);
+            nameCount.setDetailItems(detailItems);
+        }
         collector.collect(nameCount);
     }
 }

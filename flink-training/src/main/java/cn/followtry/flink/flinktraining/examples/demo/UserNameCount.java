@@ -30,7 +30,7 @@ public class UserNameCount {
     /**
      *
      * 请求参数
-     *  --brokers localhost:9092 --topic beam-on-flink
+     *  --brokers localhost:9092 --topic beam-on-flink --showDetail false
      * main.
      */
     public static void main(String[] args) throws Exception {
@@ -39,6 +39,7 @@ public class UserNameCount {
         ParameterTool tool = ParameterTool.fromArgs(args);
         String brokers = tool.get("brokers");
         String topic = tool.get("topic");
+        boolean showDetail = tool.getBoolean("showDetail");
         Properties properties = new Properties();
         String brokerServerList = brokers== null ? "localhost:9092": brokers;//"192.168.3.8:9092";
         String firstTopic = topic == null ? "beam-on-flink" : topic; //"beam-on-flink";
@@ -67,7 +68,7 @@ public class UserNameCount {
         DataStream<NameCount> sumData = watermarkData
                 .keyBy(new KeyNameSelector())
                 .timeWindow(Time.seconds(10), Time.seconds(3))
-                .apply(new WindowCountFunc()).name("4. sum data");
+                .apply(new WindowCountFunc(showDetail)).name("4. sum data");
 
         DataStream<String> sortData = sumData.keyBy("name").timeWindow(Time.seconds(10))
                 .apply(new CountSortFunc(topN)).name("5. sort result");
