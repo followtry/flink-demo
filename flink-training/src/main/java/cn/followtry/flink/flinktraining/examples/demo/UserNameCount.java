@@ -70,7 +70,8 @@ public class UserNameCount {
                 .timeWindow(Time.seconds(10), Time.seconds(3))
                 .apply(new WindowCountFunc(showDetail)).name("4. sum data");
 
-        DataStream<String> sortData = sumData.keyBy("name").timeWindow(Time.seconds(10))
+        //以窗口结束时间分组，排序不同的name 的 count
+        DataStream<String> sortData = sumData.keyBy("endTime").timeWindow(Time.seconds(10))
                 .apply(new CountSortFunc(topN)).name("5. sort result");
 
 
