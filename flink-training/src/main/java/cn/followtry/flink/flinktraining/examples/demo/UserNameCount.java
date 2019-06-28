@@ -51,7 +51,7 @@ public class UserNameCount {
         /***===========--------执行环境--------==================*/
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
         env.enableCheckpointing(1000);
-        env.setStreamTimeCharacteristic(TimeCharacteristic.EventTime);
+        env.setStreamTimeCharacteristic(TimeCharacteristic.ProcessingTime);
 
 
         /***===========--------设置数据源--------==================*/
@@ -60,19 +60,23 @@ public class UserNameCount {
 
 
         /***===========--------transform--------==================*/
-        DataStream<UserInfo> parseData =  source.map(new ParseJsonMapFunc()).name("2. parse json");
+        DataStream<UserInfo> parseData =  source.rebalance().map(new ParseJsonMapFunc()).name("2. parse json");
         //只取 filter 结果为 true 的元素，
         DataStream<UserInfo> filterData =  parseData.filter(new FilterNullFunc()).name("3. filter data");
-        DataStream<UserInfo> watermarkData =  filterData.assignTimestampsAndWatermarks(new MyWatermark(Time.seconds(1))).name("3.1 watermark data");
+        DataStream<UserInfo> watermarkData =  filterData.assignTimestampsAndWatermarks(new MyWatermark()).name("watermark data");
+
 
         DataStream<NameCount> sumData = watermarkData
                 .keyBy(new KeyNameSelector())
                 .timeWindow(Time.seconds(10), Time.seconds(3))
-                .apply(new WindowCountFunc(showDetail)).name("4. sum data");
+                .apply(new WindowCountFunc(showDetail)).name("sum data");
+
+        //第二个水印，聚合后的数据小于水印的就不要了
+        DataStream<NameCount> secondWatermarkData =  sumData.assignTimestampsAndWatermarks(new MySecondWatermark()).name("second watermark data");
 
         //以窗口结束时间分组，排序不同的name 的 count
-        DataStream<String> sortData = sumData.keyBy("endTime").timeWindow(Time.seconds(10))
-                .apply(new CountSortFunc(topN)).name("5. sort result");
+        DataStream<String> sortData = secondWatermarkData.keyBy("endTime").timeWindow(Time.seconds(3))
+                .apply(new CountSortFunc(topN)).name("sort result");
 
 
 //        DataStream<String> resultData = sumData.map(new Bean2StringMapFunc()).name("5. tuple2string");
@@ -82,7 +86,7 @@ public class UserNameCount {
         sink2Kafka(brokerServerList, secondTopic, sortData);
 
         /***===========--------execute--------==================*/
-        env.execute("userName Count");
+        env.execute("userName Count 2");
 
     }
 

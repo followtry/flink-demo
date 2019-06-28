@@ -19,6 +19,8 @@ public class NameCount{
 
     private String endTime;
 
+    private long endTs;
+
     /**  */
     private List<UserInfo> detailItems;
 
@@ -57,6 +59,14 @@ public class NameCount{
         this.endTime = endTime;
     }
 
+    public long getEndTs() {
+        return endTs;
+    }
+
+    public void setEndTs(long endTs) {
+        this.endTs = endTs;
+    }
+
     public List<UserInfo> getDetailItems() {
         return detailItems;
     }
@@ -69,7 +79,9 @@ public class NameCount{
     public String toString() {
         return "{" +
                 "count=" + count +
+                ", detailItems=" + detailItems +
                 ", endTime='" + endTime + '\'' +
+                ", endTs=" + endTs +
                 ", name='" + name + '\'' +
                 ", startTime='" + startTime + '\'' +
                 '}';

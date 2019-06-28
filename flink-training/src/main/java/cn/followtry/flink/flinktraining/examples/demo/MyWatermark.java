@@ -1,27 +1,26 @@
 package cn.followtry.flink.flinktraining.examples.demo;
 
 import cn.followtry.app.UserInfo;
-import org.apache.flink.streaming.api.functions.timestamps.BoundedOutOfOrdernessTimestampExtractor;
-import org.apache.flink.streaming.api.windowing.time.Time;
+import org.apache.flink.streaming.api.functions.timestamps.AscendingTimestampExtractor;
 
 /**
  * @author jingzhongzhi
  * @Description
  * @since 2019/6/27
  */
-public class MyWatermark extends BoundedOutOfOrdernessTimestampExtractor<UserInfo> {
+public class MyWatermark extends AscendingTimestampExtractor<UserInfo> {
 
-    public MyWatermark(Time maxOutOfOrderness) {
-        super(maxOutOfOrderness);
+    public MyWatermark() {
+        super();
     }
 
     @Override
-    public long getMaxOutOfOrdernessInMillis() {
-        return super.getMaxOutOfOrdernessInMillis();
+    public AscendingTimestampExtractor<UserInfo> withViolationHandler(MonotonyViolationHandler handler) {
+        return super.withViolationHandler(handler);
     }
 
     @Override
-    public long extractTimestamp(UserInfo userInfo) {
+    public long extractAscendingTimestamp(UserInfo userInfo) {
         return userInfo.getEventTime();
     }
 }

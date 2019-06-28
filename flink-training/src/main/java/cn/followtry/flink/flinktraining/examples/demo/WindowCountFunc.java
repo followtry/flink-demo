@@ -37,6 +37,7 @@ public class WindowCountFunc extends RichWindowFunction<UserInfo, NameCount, Str
         nameCount.setCount(count);
         nameCount.setStartTime(DateFormatUtils.format(timeWindow.getStart(),"yyyy-MM-dd HH:mm:ss"));
         nameCount.setEndTime(DateFormatUtils.format(timeWindow.getEnd(),"yyyy-MM-dd HH:mm:ss"));
+        nameCount.setEndTs(timeWindow.getEnd());
         if (showDetail) {
             List<UserInfo> detailItems = Lists.newArrayList(iterable);
             nameCount.setDetailItems(detailItems);

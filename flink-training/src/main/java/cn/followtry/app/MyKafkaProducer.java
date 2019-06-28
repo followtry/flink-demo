@@ -39,14 +39,14 @@ public class MyKafkaProducer {
             long eventTime = System.currentTimeMillis();
             String timeSuffix = DateFormatUtils.format(eventTime, "HH:mm");
 //            timeSuffix = "-";
-            UserInfo userInfo = new UserInfo(eventTime, "jingzhongzhi-"+ timeSuffix+"-" + (i % 50), i);
+            UserInfo userInfo = new UserInfo(eventTime, "jingzhongzhi-"+ timeSuffix+"-" + (i / 10), i);
             ProducerRecord<String, String> record = new ProducerRecord<>(topic, JSON.toJSONString(userInfo));
             producer.send(record, (metadata, exception) -> {
                 long offset = metadata.offset();
                 System.out.println("cur offset is :" + offset);
             });
 
-            waitTime(100);
+            waitTime(200);
         }
 
     }
