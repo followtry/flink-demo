@@ -63,6 +63,7 @@ public class CountSortFunc extends RichWindowFunction<NameCount,String, Tuple, T
 
     @Override
     public void apply(Tuple tuple, TimeWindow timeWindow, Iterable<NameCount> iterable, Collector<String> collector) throws Exception {
+        Integer inWindowTopN = topN;
         List<NameCount> nameCounts = Lists.newArrayList(iterable);
         nameCounts.sort(new Comparator<NameCount>() {
             @Override
@@ -71,15 +72,15 @@ public class CountSortFunc extends RichWindowFunction<NameCount,String, Tuple, T
             }
         });
 
-        if (nameCounts.size() < topN) {
-            topN = nameCounts.size();
+        if (nameCounts.size() < inWindowTopN) {
+            inWindowTopN = nameCounts.size();
         }
         StringBuilder result = new StringBuilder("====================统计排序:====================\n");
         result.append("明细数据: ").append(JSON.toJSONString(nameCounts)).append(" \n");
         String startTime = DateFormatUtils.ISO_DATETIME_FORMAT.format(timeWindow.getStart());
         String endTime = DateFormatUtils.ISO_DATETIME_FORMAT.format(timeWindow.getEnd());
         result.append("窗口时间: [").append(startTime).append(",").append(endTime).append("]\n");
-        for (int i = 0; i < topN; i++) {
+        for (int i = 0; i < inWindowTopN; i++) {
             NameCount nameCount = nameCounts.get(i);
             result.append("i=").append((i+1))
                     .append(",name=").append(nameCount.getName())
@@ -89,6 +90,10 @@ public class CountSortFunc extends RichWindowFunction<NameCount,String, Tuple, T
             ;
             result.append("\n");
         }
+        result.append("==============总数============\n");
+        result.append("nameCounts.size=").append(nameCounts.size()).append("\n");
+        result.append("TopN=").append(topN).append("\n");
+        result.append("inWindowTopN=").append(inWindowTopN).append("\n");
         result.append("===========================结束==============================\n");
         collector.collect(result.toString());
     }

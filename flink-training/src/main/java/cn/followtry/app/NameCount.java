@@ -1,5 +1,7 @@
 package cn.followtry.app;
 
+import java.util.List;
+
 /**
  * @author jingzhongzhi
  * @Description
@@ -16,6 +18,9 @@ public class NameCount{
     private String startTime;
 
     private String endTime;
+
+    /**  */
+    private List<UserInfo> detailItems;
 
     public NameCount() {
     }
@@ -50,6 +55,14 @@ public class NameCount{
 
     public void setEndTime(String endTime) {
         this.endTime = endTime;
+    }
+
+    public List<UserInfo> getDetailItems() {
+        return detailItems;
+    }
+
+    public void setDetailItems(List<UserInfo> detailItems) {
+        this.detailItems = detailItems;
     }
 
     @Override
