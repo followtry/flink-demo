@@ -120,8 +120,8 @@ public class UserNameCountBeam {
                 return via.expand(input);
             }
         }));
-        //提供窗口
-        PCollection<String> windowData = keyedData.apply(Window.<String>into(SlidingWindows.of(Duration.standardSeconds(10))).withAllowedLateness(Duration.millis(500)));
+        //提供窗口,beam 当前只支持到 1.5.6
+        PCollection<String> windowData = keyedData.apply(Window.<String>into(SlidingWindows.of(Duration.standardSeconds(10))).withAllowedLateness(Duration.millis(500)).discardingFiredPanes());
 
         PCollection<KV<String, Long>> countData = windowData.apply("count", Count.perElement());
 

@@ -35,7 +35,7 @@ public class MyKafkaProducer {
         init();
         KafkaProducer<String, String> producer = new KafkaProducer<>(properties);
 
-        for (int i = 0; i < 200; i++) {
+        for (int i = 0; i < 500; i++) {
             long eventTime = System.currentTimeMillis();
             String timeSuffix = DateFormatUtils.format(eventTime, "HH:mm");
 //            timeSuffix = "-";
@@ -46,7 +46,7 @@ public class MyKafkaProducer {
                 System.out.println("cur offset is :" + offset);
             });
 
-            waitTime(200);
+            waitTime(20);
         }
 
     }
