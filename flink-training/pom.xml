@@ -284,6 +284,12 @@
         </dependency>
 
         <dependency>
+            <groupId>org.apache.avro</groupId>
+            <artifactId>avro</artifactId>
+            <version>1.8.2</version>
+        </dependency>
+
+        <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <version>${junit.version}</version>
@@ -555,27 +561,6 @@
                                     versions of these dependencies.
 
                                     -->
-
-                                    <exclude>org.scala-lang:scala-library</exclude>
-                                    <exclude>org.scala-lang:scala-compiler</exclude>
-                                    <exclude>org.scala-lang:scala-reflect</exclude>
-                                    <exclude>com.data-artisans:flakka-actor_*</exclude>
-                                    <exclude>com.data-artisans:flakka-remote_*</exclude>
-                                    <exclude>com.data-artisans:flakka-slf4j_*</exclude>
-                                    <exclude>com.thoughtworks.paranamer:paranamer</exclude>
-                                    <exclude>org.xerial.snappy:snappy-java</exclude>
-                                    <exclude>org.tukaani:xz</exclude>
-                                    <exclude>com.esotericsoftware.kryo:kryo</exclude>
-                                    <exclude>com.esotericsoftware.minlog:minlog</exclude>
-                                    <exclude>org.objenesis:objenesis</exclude>
-                                    <exclude>com.twitter:chill_*</exclude>
-                                    <exclude>com.twitter:chill-java</exclude>
-                                    <exclude>junit:junit</exclude>
-                                    <exclude>org.apache.sling:org.apache.sling.commons.json</exclude>
-                                    <exclude>stax:stax-api</exclude>
-                                    <exclude>com.typesafe:config</exclude>
-                                    <exclude>org.uncommons.maths:uncommons-maths</exclude>
-                                    <exclude>com.github.scopt:scopt_*</exclude>
                                 </excludes>
                             </artifactSet>
                             <filters>

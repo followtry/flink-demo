@@ -72,7 +72,7 @@ public class UserNameCountBeam {
                 // 必需反序列化 key和 value
                 .withKeyDeserializer(LongDeserializer.class).withValueDeserializer(StringDeserializer.class)
                 .updateConsumerProperties(ImmutableMap.of("group.id", "consumer-flink-beam", "auto.offset.reset", "earliest"))
-                .withLogAppendTime().withReadCommitted().commitOffsetsInFinalize().withoutMetadata()
+                .withReadCommitted().commitOffsetsInFinalize().withoutMetadata()
         );
         PCollection<String> kafkaData = lines.apply("rmove kafka metadata", Values.create());
 
