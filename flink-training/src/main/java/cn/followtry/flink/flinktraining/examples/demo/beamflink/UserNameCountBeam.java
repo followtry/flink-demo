@@ -37,18 +37,17 @@ public class UserNameCountBeam {
     /**
      *
      * 请求参数
-     *  --brokers localhost:9092 --topic beam-on-flink --showDetail false
+     *  --brokers localhost:9092 --topic beam-on-flink
      * main.
      */
     public static void main(String[] args) throws Exception {
 
         /***===========--------解析参数--------==================*/
         ParameterTool tool = ParameterTool.fromArgs(args);
-        String brokers = tool.get("brokers");
+        String brokers = tool.get("brokers","localhost:9092");
         String topic = tool.get("topic");
-        boolean showDetail = tool.getBoolean("showDetail");
         Properties properties = new Properties();
-        String brokerServerList = brokers== null ? "localhost:9092": brokers;//"192.168.3.8:9092";
+        String brokerServerList = brokers;//"192.168.3.8:9092";
         String firstTopic = topic == null ? "beam-on-flink" : topic; //"beam-on-flink";
         String secondTopic = "beam-on-flink-res";
         properties.setProperty("bootstrap.servers", brokerServerList);
@@ -114,10 +113,10 @@ public class UserNameCountBeam {
                 withBootstrapServers(brokerServerList) // 设置写会 kafka 的集群配置地址
                 .withTopic(secondTopic) // 设置返回 kafka 的消息主题
                 .withValueSerializer(StringSerializer.class)
-                .updateProducerProperties(ImmutableMap.of("compression.type", "gzip"))
-                .withInputTimestamp()
+//                .updateProducerProperties(ImmutableMap.of("compression.type", "gzip"))
+//                .withInputTimestamp()
                 // Dataflow runner and Spark 兼容， Flink 对 kafka0.11 才支持
-                .withEOS(3, "eos-sink-group-id")
+//                .withEOS(3, "eos-sink-group-id")
                 // 只需要在此写入默认的 key 就行了，默认为 null 值
                 .values()
         );
