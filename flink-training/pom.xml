@@ -16,7 +16,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <slf4j.version>1.7.19</slf4j.version>
         <flink.version>1.7.0</flink.version>
-        <beam.version>2.11.0</beam.version>
+        <beam.version>2.13.0</beam.version>
         <scala.binary.version>2.12</scala.binary.version>
         <junit.version>4.12</junit.version>
         <jackson.version>2.9.7</jackson.version>
@@ -77,35 +77,10 @@
         <!--</dependency>-->
         <dependency>
             <groupId>org.apache.beam</groupId>
-            <artifactId>beam-runners-flink_2.11</artifactId>
+            <artifactId>beam-runners-flink-1.7</artifactId>
             <version>${beam.version}</version>
-            <exclusions>
-                <exclusion>
-                    <artifactId>jackson-annotations</artifactId>
-                    <groupId>com.fasterxml.jackson.core</groupId>
-                </exclusion>
-                <exclusion>
-                    <artifactId>commons-compress</artifactId>
-                    <groupId>org.apache.commons</groupId>
-                </exclusion>
-                <exclusion>
-                    <artifactId>flink-hadoop-fs</artifactId>
-                    <groupId>org.apache.flink</groupId>
-                </exclusion>
-                <exclusion>
-                    <artifactId>javassist</artifactId>
-                    <groupId>org.javassist</groupId>
-                </exclusion>
-                <exclusion>
-                    <artifactId>scala-library</artifactId>
-                    <groupId>org.scala-lang</groupId>
-                </exclusion>
-                <exclusion>
-                    <artifactId>slf4j-api</artifactId>
-                    <groupId>org.slf4j</groupId>
-                </exclusion>
-            </exclusions>
         </dependency>
+
 
 
         <dependency>
