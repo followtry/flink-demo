@@ -8,15 +8,23 @@ import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.io.kafka.KafkaIO;
 import org.apache.beam.sdk.options.PipelineOptions;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
+import org.apache.beam.sdk.transforms.Count;
+import org.apache.beam.sdk.transforms.Filter;
+import org.apache.beam.sdk.transforms.Keys;
 import org.apache.beam.sdk.transforms.MapElements;
+import org.apache.beam.sdk.transforms.ProcessFunction;
+import org.apache.beam.sdk.transforms.SerializableFunction;
 import org.apache.beam.sdk.transforms.SimpleFunction;
 import org.apache.beam.sdk.transforms.Values;
+import org.apache.beam.sdk.transforms.windowing.SlidingWindows;
+import org.apache.beam.sdk.transforms.windowing.Window;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.flink.api.java.utils.ParameterTool;
 import org.apache.kafka.common.serialization.LongDeserializer;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
+import org.joda.time.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -71,7 +79,8 @@ public class UserNameCountBeam {
                 .withTopic(firstTopic)
                 // 必需反序列化 key和 value
                 .withKeyDeserializer(LongDeserializer.class).withValueDeserializer(StringDeserializer.class)
-                .updateConsumerProperties(ImmutableMap.of("group.id", "consumer-flink-beam", "auto.offset.reset", "earliest"))
+                //"group.id", "consumer-flink-beam", "auto.offset.reset", "earliest"
+                .updateConsumerProperties(ImmutableMap.of("group.id", "consumer-flink-beam"))
                 .withReadCommitted().commitOffsetsInFinalize().withoutMetadata()
         );
         PCollection<String> kafkaData = lines.apply("rmove kafka metadata", Values.create());
@@ -93,12 +102,45 @@ public class UserNameCountBeam {
             }
         }));
 
-        PCollection<String> result = parseJsonData.apply("serializer bean 2 json",MapElements.via(new SimpleFunction<UserInfo, String>() {
+        PCollection<UserInfo> filterData = parseJsonData.apply("filter", Filter.by(new ProcessFunction<UserInfo, Boolean>() {
             @Override
-            public String apply(UserInfo input) {
-                return JSON.toJSONString(input);
+            public Boolean apply(UserInfo input) throws Exception {
+                return input != null && input.getEventTime() != null && input.getName() != null;
             }
         }));
+        PCollection<String> keyedData = filterData.apply("keyed data", Keys.compose("keyed Data", new SerializableFunction<PCollection<UserInfo>, PCollection<String>>() {
+            @Override
+            public PCollection<String> apply(PCollection<UserInfo> input) {
+                MapElements<UserInfo, String> via = MapElements.via(new SimpleFunction<UserInfo, String>() {
+                    @Override
+                    public String apply(UserInfo input) {
+                        return input.getName();
+                    }
+                });
+                return via.expand(input);
+            }
+        }));
+        //提供窗口
+        PCollection<String> windowData = keyedData.apply(Window.<String>into(SlidingWindows.of(Duration.standardSeconds(10))).withAllowedLateness(Duration.millis(500)));
+
+        PCollection<KV<String, Long>> countData = windowData.apply("count", Count.perElement());
+
+        PCollection<String> result = countData.apply("concat key-value", MapElements.via(new SimpleFunction<KV<String, Long>, String>() {
+            @Override
+            public String apply(KV<String, Long> input) {
+                System.out.print(" 进行统计：" + input.getKey() + ": " + input.getValue());
+                return input.getKey() + ": " + input.getValue();
+            }
+        }));
+
+
+        //将 bean 转为 String
+//        PCollection<String> result = parseJsonData.apply("serializer bean 2 json",MapElements.via(new SimpleFunction<UserInfo, String>() {
+//            @Override
+//            public String apply(UserInfo input) {
+//                return JSON.toJSONString(input);
+//            }
+//        }));
         /***===========--------sink to out--------==================*/
         //sink 到 kafka中
         sink2Kafka(brokerServerList, secondTopic, result);
