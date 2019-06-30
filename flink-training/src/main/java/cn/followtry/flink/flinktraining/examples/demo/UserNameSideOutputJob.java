@@ -2,14 +2,18 @@ package cn.followtry.flink.flinktraining.examples.demo;
 
 import cn.followtry.app.NameCount;
 import cn.followtry.app.UserInfo;
+import com.alibaba.fastjson.JSON;
 import org.apache.flink.api.common.serialization.SimpleStringSchema;
 import org.apache.flink.api.java.utils.ParameterTool;
 import org.apache.flink.streaming.api.TimeCharacteristic;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
+import org.apache.flink.streaming.api.functions.ProcessFunction;
 import org.apache.flink.streaming.api.windowing.time.Time;
 import org.apache.flink.streaming.connectors.kafka.FlinkKafkaConsumer011;
 import org.apache.flink.streaming.connectors.kafka.FlinkKafkaProducer011;
+import org.apache.flink.util.Collector;
+import org.apache.flink.util.OutputTag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,9 +24,9 @@ import java.util.Properties;
  * @author jingzhongzhi
  * @since 2019-01-13
  */
-public class UserNameCount {
+public class UserNameSideOutputJob {
 
-    private static final Logger log = LoggerFactory.getLogger(UserNameCount.class);
+    private static final Logger log = LoggerFactory.getLogger(UserNameSideOutputJob.class);
 
     public static final String ZK_HOSTS = "127.0.0.1:2181,127.0.0.1:2182,127.0.0.1:2183";
 
@@ -41,18 +45,20 @@ public class UserNameCount {
         String topic = tool.get("topic","beam-on-flink");
         boolean showDetail = tool.getBoolean("showDetail",false);
         Properties properties = new Properties();
-        String brokerServerList = brokers;//"192.168.3.8:9092";
-        String firstTopic = topic == null ? "beam-on-flink" : topic; //"beam-on-flink";
+        String brokerServerList = brokers;
+        //"beam-on-flink";
+        String firstTopic = topic;
         String secondTopic = "beam-on-flink-res";
+        String thirdTopic = "beam-on-flink-side-output";
+
         properties.setProperty("bootstrap.servers", brokerServerList);
-        properties.setProperty("group.id", "consumer-flink-2");
+        properties.setProperty("group.id", "consumer-flink-side-output");
         properties.setProperty("zookeeper.connect",ZK_HOSTS);
 
         /***===========--------执行环境--------==================*/
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
         env.enableCheckpointing(1000);
         env.setStreamTimeCharacteristic(TimeCharacteristic.ProcessingTime);
-
 
         /***===========--------设置数据源--------==================*/
         FlinkKafkaConsumer011<String> flinkKafkaConsumer011 = new FlinkKafkaConsumer011<>(firstTopic, new SimpleStringSchema(), properties);
@@ -70,6 +76,14 @@ public class UserNameCount {
                 .keyBy(new KeyNameSelector())
                 .timeWindow(Time.minutes(1), Time.seconds(10))
                 .apply(new WindowCountFunc(showDetail)).name("sum data");
+
+        OutputTag<String> outputTag = new OutputTag<>("my-side-output");
+        sumData.process(new ProcessFunction<NameCount, String>() {
+            @Override
+            public void processElement(NameCount nameCount, Context context, Collector<String> collector) throws Exception {
+                context.output(outputTag,"side-output"+ JSON.toJSONString(nameCount));
+            }
+        });
 
         //第二个水印，聚合后的数据小于水印的就不要了
         DataStream<NameCount> secondWatermarkData =  sumData.assignTimestampsAndWatermarks(new MySecondWatermark()).name("second watermark data");

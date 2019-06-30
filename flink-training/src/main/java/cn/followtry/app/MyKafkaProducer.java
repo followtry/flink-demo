@@ -1,6 +1,7 @@
 package cn.followtry.app;
 
 import com.alibaba.fastjson.JSON;
+import org.apache.commons.lang3.RandomUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
@@ -8,6 +9,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Properties;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * @author jingzhongzhi
@@ -28,26 +31,37 @@ public class MyKafkaProducer {
     /**  */
     private static Properties properties;
 
+    private static ExecutorService threadPool = Executors.newFixedThreadPool(4);
+
+
     /**
      * main.
      */
     public static void main(String[] args) {
+
+
         init();
         KafkaProducer<String, String> producer = new KafkaProducer<>(properties);
 
-        for (int i = 0; i < 100; i++) {
+        for (int i = 0; i < 60000; i++) {
             long eventTime = System.currentTimeMillis();
             String timeSuffix = DateFormatUtils.format(eventTime, "HH:mm");
-//            timeSuffix = "-";
-            UserInfo userInfo = new UserInfo(eventTime, "jingzhongzhi-"+ timeSuffix+"-" + (i / 10), i);
+            timeSuffix = "-";
+            int randomInt = RandomUtils.nextInt(1, 500);
+            UserInfo userInfo = new UserInfo(eventTime, "jingzhongzhi-"+ timeSuffix+"-" + randomInt, i);
             ProducerRecord<String, String> record = new ProducerRecord<>(topic, JSON.toJSONString(userInfo));
-            producer.send(record, (metadata, exception) -> {
-                long offset = metadata.offset();
-                System.out.println("cur offset is :" + offset);
+            threadPool.submit(new Runnable() {
+                @Override
+                public void run() {
+                    producer.send(record, (metadata, exception) -> {
+                        long offset = metadata.offset();
+//                System.out.println("cur offset is :" + offset);
+                    });
+                }
             });
-
-            waitTime(20);
         }
+        waitTime(3000);
+        System.out.println("结束");
 
     }
 

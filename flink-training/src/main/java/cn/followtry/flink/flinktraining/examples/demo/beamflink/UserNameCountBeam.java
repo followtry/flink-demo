@@ -14,8 +14,6 @@ import org.apache.beam.sdk.transforms.ProcessFunction;
 import org.apache.beam.sdk.transforms.SimpleFunction;
 import org.apache.beam.sdk.transforms.Values;
 import org.apache.beam.sdk.transforms.WithTimestamps;
-import org.apache.beam.sdk.transforms.windowing.AfterProcessingTime;
-import org.apache.beam.sdk.transforms.windowing.AfterWatermark;
 import org.apache.beam.sdk.transforms.windowing.SlidingWindows;
 import org.apache.beam.sdk.transforms.windowing.Window;
 import org.apache.beam.sdk.values.KV;
@@ -117,24 +115,24 @@ public class UserNameCountBeam {
         PCollection<UserInfo> timestampData = filterData.apply("add timestamp", WithTimestamps.of(new SimpleFunction<UserInfo, Instant>() {
             @Override
             public Instant apply(UserInfo input) {
-                Long eventTime = input.getEventTime() + 1000;
+                Long eventTime = input.getEventTime();
                 Instant instant = new Instant(eventTime);
                 System.out.println("event timestamp :" + instant.toDate());
                 return instant;
             }
-        }));
+        }).withAllowedTimestampSkew(Duration.millis(987)));
 
         //设置触发器和水位线
-        AfterWatermark.AfterWatermarkEarlyAndLate watermarkEarlyAndLate = AfterWatermark.pastEndOfWindow()
-                // During the month, get near real-time estimates.
-                .withEarlyFirings(AfterProcessingTime.pastFirstElementInPane().plusDelayOf(Duration.standardSeconds(5)))
-                // Fire on any late data so the bill can be corrected.
-                .withLateFirings(AfterProcessingTime.pastFirstElementInPane().plusDelayOf(Duration.standardSeconds(10)));
+//        AfterWatermark.AfterWatermarkEarlyAndLate watermarkEarlyAndLate = AfterWatermark.pastEndOfWindow()
+//                // During the month, get near real-time estimates.
+//                .withEarlyFirings(AfterProcessingTime.pastFirstElementInPane().plusDelayOf(Duration.standardSeconds(5)))
+//                // Fire on any late data so the bill can be corrected.
+//                .withLateFirings(AfterProcessingTime.pastFirstElementInPane().plusDelayOf(Duration.standardSeconds(10)));
 
         //提供窗口
         PCollection<UserInfo> windowData = timestampData
-                .apply("slide window",Window.<UserInfo>into(SlidingWindows.of(Duration.standardSeconds(10)).every(Duration.standardSeconds(3)))
-                        .triggering(watermarkEarlyAndLate)
+                .apply("slide window",Window.<UserInfo>into(SlidingWindows.of(Duration.standardSeconds(30)).every(Duration.standardSeconds(5)))
+//                        .triggering(watermarkEarlyAndLate)
                         .withAllowedLateness(Duration.standardSeconds(3))
                         .accumulatingFiredPanes()
                         );

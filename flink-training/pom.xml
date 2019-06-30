@@ -9,8 +9,7 @@
     <version>1.0</version>
 
     <name>flink-native-training</name>
-    <!-- FIXME change it to the project's website -->
-    <url>http://www.example.com</url>
+    <url>http://followtry.cn</url>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -569,7 +568,7 @@
                             -->
                             <transformers>
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                                    <mainClass>cn.followtry.flink.flinktraining.examples.demo.beamflink.UserNameCountBeam</mainClass>
+                                    <mainClass>cn.followtry.flink.flinktraining.examples.demo.UserNameSideOutputJob</mainClass>
                                 </transformer>
                             </transformers>
                             <createDependencyReducedPom>false</createDependencyReducedPom>
