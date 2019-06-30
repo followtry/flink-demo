@@ -567,6 +567,11 @@
                                 </transformer>
                             </transformers>
                             -->
+                            <transformers>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                                    <mainClass>cn.followtry.flink.flinktraining.examples.demo.beamflink.UserNameCountBeam</mainClass>
+                                </transformer>
+                            </transformers>
                             <createDependencyReducedPom>false</createDependencyReducedPom>
                         </configuration>
                     </execution>

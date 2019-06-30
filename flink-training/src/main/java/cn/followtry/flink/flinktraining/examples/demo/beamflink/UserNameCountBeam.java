@@ -1,5 +1,6 @@
 package cn.followtry.flink.flinktraining.examples.demo.beamflink;
 
+import cn.followtry.app.NameCount;
 import cn.followtry.app.UserInfo;
 import com.alibaba.fastjson.JSON;
 import com.google.common.collect.ImmutableMap;
@@ -8,14 +9,14 @@ import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.io.kafka.KafkaIO;
 import org.apache.beam.sdk.options.PipelineOptions;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
-import org.apache.beam.sdk.transforms.Count;
 import org.apache.beam.sdk.transforms.Filter;
-import org.apache.beam.sdk.transforms.Keys;
 import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.transforms.ProcessFunction;
-import org.apache.beam.sdk.transforms.SerializableFunction;
 import org.apache.beam.sdk.transforms.SimpleFunction;
 import org.apache.beam.sdk.transforms.Values;
+import org.apache.beam.sdk.transforms.WithTimestamps;
+import org.apache.beam.sdk.transforms.windowing.AfterProcessingTime;
+import org.apache.beam.sdk.transforms.windowing.AfterWatermark;
 import org.apache.beam.sdk.transforms.windowing.SlidingWindows;
 import org.apache.beam.sdk.transforms.windowing.Window;
 import org.apache.beam.sdk.values.KV;
@@ -25,6 +26,7 @@ import org.apache.kafka.common.serialization.LongDeserializer;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.joda.time.Duration;
+import org.joda.time.Instant;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,13 +55,13 @@ public class UserNameCountBeam {
         /***===========--------解析参数--------==================*/
         ParameterTool tool = ParameterTool.fromArgs(args);
         String brokers = tool.get("brokers","localhost:9092");
-        String topic = tool.get("topic");
+        String topic = tool.get("topic","beam-on-flink");
         Properties properties = new Properties();
-        String brokerServerList = brokers;//"192.168.3.8:9092";
-        String firstTopic = topic == null ? "beam-on-flink" : topic; //"beam-on-flink";
+        String brokerServerList = brokers;
+        String firstTopic = topic == null ? "beam-on-flink" : topic;
         String secondTopic = "beam-on-flink-res";
         properties.setProperty("bootstrap.servers", brokerServerList);
-        properties.setProperty("group.id", "consumer-flink-2");
+        properties.setProperty("group.id", "consumer-flink-beam");
         properties.setProperty("zookeeper.connect",ZK_HOSTS);
 
         /***===========--------执行环境--------==================*/
@@ -67,6 +69,7 @@ public class UserNameCountBeam {
         PipelineOptions options = PipelineOptionsFactory.create();
         // 显式指定 PipelineRunner：FlinkRunner 必须指定如果不指定则为本地
         options.setRunner(FlinkRunner.class);
+        options.setJobName("beam-running-on-flink");
         // 设置相关管道
         Pipeline pipeline = Pipeline.create(options);
 
@@ -102,45 +105,54 @@ public class UserNameCountBeam {
             }
         }));
 
+        //过滤数据
         PCollection<UserInfo> filterData = parseJsonData.apply("filter", Filter.by(new ProcessFunction<UserInfo, Boolean>() {
             @Override
             public Boolean apply(UserInfo input) throws Exception {
                 return input != null && input.getEventTime() != null && input.getName() != null;
             }
         }));
-        PCollection<String> keyedData = filterData.apply("keyed data", Keys.compose("keyed Data", new SerializableFunction<PCollection<UserInfo>, PCollection<String>>() {
-            @Override
-            public PCollection<String> apply(PCollection<UserInfo> input) {
-                MapElements<UserInfo, String> via = MapElements.via(new SimpleFunction<UserInfo, String>() {
-                    @Override
-                    public String apply(UserInfo input) {
-                        return input.getName();
-                    }
-                });
-                return via.expand(input);
-            }
-        }));
-        //提供窗口,beam 当前只支持到 1.5.6
-        PCollection<String> windowData = keyedData.apply(Window.<String>into(SlidingWindows.of(Duration.standardSeconds(10))).withAllowedLateness(Duration.millis(500)).discardingFiredPanes());
 
-        PCollection<KV<String, Long>> countData = windowData.apply("count", Count.perElement());
 
-        PCollection<String> result = countData.apply("concat key-value", MapElements.via(new SimpleFunction<KV<String, Long>, String>() {
+        // Add an element timestamp based on the event log
+        PCollection<UserInfo> timestampData = filterData.apply("add timestamp", WithTimestamps.of(new SimpleFunction<UserInfo, Instant>() {
             @Override
-            public String apply(KV<String, Long> input) {
-                System.out.print(" 进行统计：" + input.getKey() + ": " + input.getValue());
-                return input.getKey() + ": " + input.getValue();
+            public Instant apply(UserInfo input) {
+                Long eventTime = input.getEventTime() + 1000;
+                Instant instant = new Instant(eventTime);
+                System.out.println("event timestamp :" + instant.toDate());
+                return instant;
             }
         }));
 
+        //设置触发器和水位线
+        AfterWatermark.AfterWatermarkEarlyAndLate watermarkEarlyAndLate = AfterWatermark.pastEndOfWindow()
+                // During the month, get near real-time estimates.
+                .withEarlyFirings(AfterProcessingTime.pastFirstElementInPane().plusDelayOf(Duration.standardSeconds(5)))
+                // Fire on any late data so the bill can be corrected.
+                .withLateFirings(AfterProcessingTime.pastFirstElementInPane().plusDelayOf(Duration.standardSeconds(10)));
 
-        //将 bean 转为 String
-//        PCollection<String> result = parseJsonData.apply("serializer bean 2 json",MapElements.via(new SimpleFunction<UserInfo, String>() {
-//            @Override
-//            public String apply(UserInfo input) {
-//                return JSON.toJSONString(input);
-//            }
-//        }));
+        //提供窗口
+        PCollection<UserInfo> windowData = timestampData
+                .apply("slide window",Window.<UserInfo>into(SlidingWindows.of(Duration.standardSeconds(10)).every(Duration.standardSeconds(3)))
+                        .triggering(watermarkEarlyAndLate)
+                        .withAllowedLateness(Duration.standardSeconds(3))
+                        .accumulatingFiredPanes()
+                        );
+
+
+        PCollection<KV<String, NameCount>> countData = windowData.apply("count", new ExtractAndSumScore("name"));
+
+
+        PCollection<String> result = countData.apply("concat key-value", MapElements.via(new SimpleFunction<KV<String, NameCount>, String>() {
+            @Override
+            public String apply(KV<String, NameCount> input) {
+                System.out.print(" 进行统计：" + input.getKey() + ": " + JSON.toJSONString(input.getValue())+"\n");
+                return input.getKey() + ": " + JSON.toJSONString(input.getValue());
+            }
+        }));
+
+
         /***===========--------sink to out--------==================*/
         //sink 到 kafka中
         sink2Kafka(brokerServerList, secondTopic, result);

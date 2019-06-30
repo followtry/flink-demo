@@ -12,7 +12,7 @@ public class NameCount{
     private String name;
 
     /**  */
-    private Integer count;
+    private Integer count = 0;
 
     /**  */
     private String startTime;
