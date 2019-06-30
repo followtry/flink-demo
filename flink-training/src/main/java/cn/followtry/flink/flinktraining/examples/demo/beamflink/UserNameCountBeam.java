@@ -1,6 +1,5 @@
 package cn.followtry.flink.flinktraining.examples.demo.beamflink;
 
-import cn.followtry.app.NameCount;
 import cn.followtry.app.UserInfo;
 import com.alibaba.fastjson.JSON;
 import com.google.common.collect.ImmutableMap;
@@ -141,12 +140,12 @@ public class UserNameCountBeam {
                         );
 
 
-        PCollection<KV<String, NameCount>> countData = windowData.apply("count", new ExtractAndSumScore("name"));
+        PCollection<KV<String, Long>> countData = windowData.apply("count", new ExtractAndSumScore("name"));
 
 
-        PCollection<String> result = countData.apply("concat key-value", MapElements.via(new SimpleFunction<KV<String, NameCount>, String>() {
+        PCollection<String> result = countData.apply("concat key-value", MapElements.via(new SimpleFunction<KV<String, Long>, String>() {
             @Override
-            public String apply(KV<String, NameCount> input) {
+            public String apply(KV<String, Long> input) {
                 System.out.print(" 进行统计：" + input.getKey() + ": " + JSON.toJSONString(input.getValue())+"\n");
                 return input.getKey() + ": " + JSON.toJSONString(input.getValue());
             }

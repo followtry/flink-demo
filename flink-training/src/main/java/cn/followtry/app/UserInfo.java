@@ -3,6 +3,7 @@ package cn.followtry.app;
 import org.apache.commons.lang3.time.DateFormatUtils;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 /**
  * @author jingzhongzhi
@@ -19,6 +20,9 @@ public class UserInfo implements Serializable{
     private String name;
 
     private long id;
+
+    public UserInfo() {
+    }
 
     public UserInfo(Long eventTime, String name, long id) {
         this.eventTime = eventTime;
@@ -57,6 +61,14 @@ public class UserInfo implements Serializable{
 
     public void setEventTimeStr(String eventTimeStr) {
         this.eventTimeStr = eventTimeStr;
+    }
+
+    public String getKey(String keyName){
+        if (Objects.equals("eventTime", keyName)) {
+            return this.eventTimeStr;
+        } else {
+            return this.name;
+        }
     }
 
     @Override
