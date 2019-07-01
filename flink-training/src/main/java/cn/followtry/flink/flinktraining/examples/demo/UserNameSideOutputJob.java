@@ -2,17 +2,16 @@ package cn.followtry.flink.flinktraining.examples.demo;
 
 import cn.followtry.app.NameCount;
 import cn.followtry.app.UserInfo;
-import com.alibaba.fastjson.JSON;
 import org.apache.flink.api.common.serialization.SimpleStringSchema;
+import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.api.java.utils.ParameterTool;
 import org.apache.flink.streaming.api.TimeCharacteristic;
 import org.apache.flink.streaming.api.datastream.DataStream;
+import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
-import org.apache.flink.streaming.api.functions.ProcessFunction;
 import org.apache.flink.streaming.api.windowing.time.Time;
 import org.apache.flink.streaming.connectors.kafka.FlinkKafkaConsumer011;
 import org.apache.flink.streaming.connectors.kafka.FlinkKafkaProducer011;
-import org.apache.flink.util.Collector;
 import org.apache.flink.util.OutputTag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -77,16 +76,13 @@ public class UserNameSideOutputJob {
                 .timeWindow(Time.minutes(1), Time.seconds(10))
                 .apply(new WindowCountFunc(showDetail)).name("sum data");
 
-        OutputTag<String> outputTag = new OutputTag<>("my-side-output");
-        sumData.process(new ProcessFunction<NameCount, String>() {
-            @Override
-            public void processElement(NameCount nameCount, Context context, Collector<String> collector) throws Exception {
-                context.output(outputTag,"side-output"+ JSON.toJSONString(nameCount));
-            }
-        });
+        //需要指定 typeinfomatation 信息
+        OutputTag<NameCount> outputTag = new OutputTag<>("my-side-output", TypeInformation.of(NameCount.class));
+        SingleOutputStreamOperator<NameCount> side_output = sumData.process(new SideOutputProcessFunc(outputTag)).name("side output");
+        DataStream<NameCount> sideOutputData = side_output.getSideOutput(outputTag);
 
         //第二个水印，聚合后的数据小于水印的就不要了
-        DataStream<NameCount> secondWatermarkData =  sumData.assignTimestampsAndWatermarks(new MySecondWatermark()).name("second watermark data");
+        DataStream<NameCount> secondWatermarkData =  sideOutputData.assignTimestampsAndWatermarks(new MySecondWatermark()).name("second watermark data");
 
         //以窗口结束时间分组，排序不同的name 的 count
         DataStream<String> sortData = secondWatermarkData.keyBy("endTime").timeWindow(Time.seconds(10))

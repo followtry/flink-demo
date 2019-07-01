@@ -50,17 +50,12 @@ public class MyKafkaProducer {
             int randomInt = RandomUtils.nextInt(1, 500);
             UserInfo userInfo = new UserInfo(eventTime, "jingzhongzhi-"+ timeSuffix+"-" + randomInt, i);
             ProducerRecord<String, String> record = new ProducerRecord<>(topic, JSON.toJSONString(userInfo));
-            threadPool.submit(new Runnable() {
-                @Override
-                public void run() {
-                    producer.send(record, (metadata, exception) -> {
-                        long offset = metadata.offset();
-//                System.out.println("cur offset is :" + offset);
-                    });
-                }
+            producer.send(record, (metadata, exception) -> {
+                long offset = metadata.offset();
+                System.out.println("cur offset is :" + offset);
             });
+            waitTime(30);
         }
-        waitTime(3000);
         System.out.println("结束");
 
     }
