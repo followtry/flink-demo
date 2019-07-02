@@ -115,6 +115,14 @@
             <version>${flink.table.version}</version>
         </dependency>
 
+        <!-- https://mvnrepository.com/artifact/org.apache.flink/flink-json -->
+        <dependency>
+            <groupId>org.apache.flink</groupId>
+            <artifactId>flink-json</artifactId>
+            <version>${flink.table.version}</version>
+        </dependency>
+
+
         <!-- https://mvnrepository.com/artifact/org.apache.flink/flink-table -->
         <dependency>
             <groupId>org.apache.flink</groupId>
@@ -339,6 +347,9 @@
                         </goals>
                     </execution>
                 </executions>
+                <configuration>
+                    <mainClass>cn.followtry.flink.flinktraining.examples.demo.TableWordCountJob</mainClass>
+                </configuration>
             </plugin>
 
             <!-- Scala Compiler -->
@@ -602,7 +613,8 @@
                             -->
                             <transformers>
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                                    <mainClass>cn.followtry.flink.flinktraining.examples.demo.TableWordCountJob</mainClass>
+                                    <!--<mainClass>cn.followtry.flink.flinktraining.examples.demo.TableWordCountJob</mainClass>-->
+                                    <mainClass>cn.followtry.flink.flinktraining.examples.demo.UserNameCount</mainClass>
                                     <!--<mainClass>cn.followtry.flink.flinktraining.examples.demo.UserNameSideOutputJob</mainClass>-->
                                 </transformer>
                             </transformers>
@@ -644,46 +656,4 @@
             </plugin>
         </plugins>
     </build>
-    <profiles>
-        <profile>
-            <id>release</id>
-            <build>
-                <plugins>
-                    <!-- disable the exclusion rules -->
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-shade-plugin</artifactId>
-                        <version>2.4.1</version>
-                        <executions>
-                            <execution>
-                                <phase>package</phase>
-                                <goals>
-                                    <goal>shade</goal>
-                                </goals>
-                                <configuration>
-                                    <artifactSet>
-                                        <excludes combine.self="override"></excludes>
-                                    </artifactSet>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-gpg-plugin</artifactId>
-                        <version>1.5</version>
-                        <executions>
-                            <execution>
-                                <id>sign-artifacts</id>
-                                <phase>verify</phase>
-                                <goals>
-                                    <goal>sign</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-    </profiles>
 </project>
