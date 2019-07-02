@@ -45,15 +45,16 @@
         <dependency>
             <groupId>org.apache.flink</groupId>
             <artifactId>flink-jdbc_2.12</artifactId>
-            <version>1.7.0</version>
+            <version>${flink.version}</version>
         </dependency>
 
         <!-- https://mvnrepository.com/artifact/org.apache.flink/flink-connector-wikiedits -->
         <dependency>
             <groupId>org.apache.flink</groupId>
             <artifactId>flink-connector-wikiedits_2.12</artifactId>
-            <version>1.7.0</version>
+            <version>1.8.0</version>
         </dependency>
+
 
         <!--apache beam dep start-->
         <!--<dependency>-->
@@ -83,6 +84,22 @@
             <exclusions>
                 <exclusion>
                     <artifactId>flink-clients_2.11</artifactId>
+                    <groupId>org.apache.flink</groupId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>flink-runtime_2.11</artifactId>
+                    <groupId>org.apache.flink</groupId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>flink-annotations</artifactId>
+                    <groupId>org.apache.flink</groupId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>flink-core</artifactId>
+                    <groupId>org.apache.flink</groupId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>flink-metrics-core</artifactId>
                     <groupId>org.apache.flink</groupId>
                 </exclusion>
             </exclusions>
@@ -124,8 +141,20 @@
 
         <dependency>
             <groupId>org.apache.flink</groupId>
+            <artifactId>flink-metrics-core</artifactId>
+            <version>${flink.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.flink</groupId>
             <artifactId>flink-clients_${scala.binary.version}</artifactId>
             <version>${flink.table.version}</version>
+            <exclusions>
+                <exclusion>
+                    <artifactId>flink-core</artifactId>
+                    <groupId>org.apache.flink</groupId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <!-- https://mvnrepository.com/artifact/org.apache.flink/flink-json -->
@@ -149,6 +178,12 @@
             <groupId>org.apache.flink</groupId>
             <artifactId>flink-table-common</artifactId>
             <version>${flink.table.version}</version>
+            <exclusions>
+                <exclusion>
+                    <artifactId>flink-core</artifactId>
+                    <groupId>org.apache.flink</groupId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <dependency>
@@ -186,6 +221,10 @@
                 <exclusion>
                     <artifactId>scala-library</artifactId>
                     <groupId>org.scala-lang</groupId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>flink-core</artifactId>
+                    <groupId>org.apache.flink</groupId>
                 </exclusion>
             </exclusions>
         </dependency>
@@ -228,6 +267,10 @@
                 <exclusion>
                     <artifactId>slf4j-api</artifactId>
                     <groupId>org.slf4j</groupId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>flink-core</artifactId>
+                    <groupId>org.apache.flink</groupId>
                 </exclusion>
             </exclusions>
         </dependency>
