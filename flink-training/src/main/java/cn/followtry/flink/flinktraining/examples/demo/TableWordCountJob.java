@@ -7,7 +7,7 @@ import org.apache.flink.api.java.utils.ParameterTool;
 import org.apache.flink.streaming.api.TimeCharacteristic;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
-import org.apache.flink.streaming.connectors.kafka.FlinkKafkaConsumer011;
+import org.apache.flink.streaming.connectors.kafka.FlinkKafkaConsumer;
 import org.apache.flink.table.api.Table;
 import org.apache.flink.table.api.Types;
 import org.apache.flink.table.api.java.StreamTableEnvironment;
@@ -57,7 +57,7 @@ public class TableWordCountJob {
 
 
         /***===========--------设置数据源--------==================*/
-        FlinkKafkaConsumer011<String> flinkKafkaConsumer011 = new FlinkKafkaConsumer011<>(firstTopic, new SimpleStringSchema(), properties);
+        FlinkKafkaConsumer<String> flinkKafkaConsumer011 = new FlinkKafkaConsumer<>(firstTopic, new SimpleStringSchema(), properties);
         DataStream<String> source = env.addSource(flinkKafkaConsumer011).name("1. add source");
         DataStream<UserInfo> parseData =  source.rebalance().map(new ParseJsonMapFunc()).name("2. parse json");
 
