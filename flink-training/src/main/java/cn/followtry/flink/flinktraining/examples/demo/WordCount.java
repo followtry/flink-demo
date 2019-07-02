@@ -13,8 +13,8 @@ import org.apache.flink.streaming.api.datastream.WindowedStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.windowing.time.Time;
 import org.apache.flink.streaming.api.windowing.windows.TimeWindow;
-import org.apache.flink.streaming.connectors.kafka.FlinkKafkaConsumer011;
-import org.apache.flink.streaming.connectors.kafka.FlinkKafkaProducer011;
+import org.apache.flink.streaming.connectors.kafka.FlinkKafkaConsumer;
+import org.apache.flink.streaming.connectors.kafka.FlinkKafkaProducer;
 import org.apache.flink.util.Collector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,7 +53,7 @@ public class WordCount {
 
 
         /***===========--------设置数据源--------==================*/
-        FlinkKafkaConsumer011<String> flinkKafkaConsumer011 = new FlinkKafkaConsumer011<>(firstTopic, new SimpleStringSchema(), properties);
+        FlinkKafkaConsumer<String> flinkKafkaConsumer011 = new FlinkKafkaConsumer<>(firstTopic, new SimpleStringSchema(), properties);
         DataStreamSource<String> source = env.addSource(flinkKafkaConsumer011);
 
 
@@ -75,7 +75,7 @@ public class WordCount {
     }
 
     private static void sink2Kafka(String brokerServerList, String secondTopic, DataStream<String> dateStreamRes) {
-        FlinkKafkaProducer011<String> sink2Kafka = new FlinkKafkaProducer011<>(brokerServerList,secondTopic, new SimpleStringSchema());
+        FlinkKafkaProducer<String> sink2Kafka = new FlinkKafkaProducer<>(brokerServerList,secondTopic, new SimpleStringSchema());
         dateStreamRes.addSink(sink2Kafka);
     }
 

@@ -14,8 +14,9 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <slf4j.version>1.7.19</slf4j.version>
-        <flink.version>1.7.0</flink.version>
+
         <flink.table.version>1.8.0</flink.table.version>
+        <flink.version>1.8.0</flink.version>
         <beam.version>2.13.0</beam.version>
         <scala.binary.version>2.12</scala.binary.version>
         <junit.version>4.12</junit.version>
@@ -211,11 +212,6 @@
             </exclusions>
         </dependency>
 
-        <dependency>
-            <groupId>org.apache.flink</groupId>
-            <artifactId>flink-table_${scala.binary.version}</artifactId>
-            <version>${flink.version}</version>
-        </dependency>
 
         <dependency>
             <groupId>org.apache.flink</groupId>
@@ -234,7 +230,7 @@
         <!--apache flink connector start-->
         <dependency>
             <groupId>org.apache.flink</groupId>
-            <artifactId>flink-connector-kafka-0.11_${scala.binary.version}</artifactId>
+            <artifactId>flink-connector-kafka_${scala.binary.version}</artifactId>
             <version>${flink.version}</version>
             <exclusions>
                 <exclusion>
