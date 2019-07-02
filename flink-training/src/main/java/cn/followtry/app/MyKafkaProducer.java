@@ -43,7 +43,7 @@ public class MyKafkaProducer {
         init();
         KafkaProducer<String, String> producer = new KafkaProducer<>(properties);
 
-        for (int i = 0; i < 60000; i++) {
+        for (int i = 0; i < 1000; i++) {
             long eventTime = System.currentTimeMillis();
             String timeSuffix = DateFormatUtils.format(eventTime, "HH:mm");
             timeSuffix = "-";

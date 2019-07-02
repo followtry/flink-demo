@@ -15,6 +15,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <slf4j.version>1.7.19</slf4j.version>
         <flink.version>1.7.0</flink.version>
+        <flink.table.version>1.8.0</flink.table.version>
         <beam.version>2.13.0</beam.version>
         <scala.binary.version>2.12</scala.binary.version>
         <junit.version>4.12</junit.version>
@@ -111,7 +112,41 @@
         <dependency>
             <groupId>org.apache.flink</groupId>
             <artifactId>flink-clients_${scala.binary.version}</artifactId>
-            <version>${flink.version}</version>
+            <version>${flink.table.version}</version>
+        </dependency>
+
+        <!-- https://mvnrepository.com/artifact/org.apache.flink/flink-table -->
+        <dependency>
+            <groupId>org.apache.flink</groupId>
+            <artifactId>flink-table</artifactId>
+            <version>${flink.table.version}</version>
+            <type>pom</type>
+        </dependency>
+
+
+        <dependency>
+            <groupId>org.apache.flink</groupId>
+            <artifactId>flink-table-common</artifactId>
+            <version>${flink.table.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.flink</groupId>
+            <artifactId>flink-table-api-java</artifactId>
+            <version>${flink.table.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.flink</groupId>
+            <artifactId>flink-table-api-java-bridge_2.12</artifactId>
+            <version>${flink.table.version}</version>
+        </dependency>
+
+        <!-- https://mvnrepository.com/artifact/org.apache.flink/flink-table-planner -->
+        <dependency>
+            <groupId>org.apache.flink</groupId>
+            <artifactId>flink-table-planner_2.12</artifactId>
+            <version>${flink.table.version}</version>
         </dependency>
 
         <dependency>
@@ -516,7 +551,6 @@
                                     <exclude>org.apache.flink:flink-scala_${scala.binary.version}</exclude>
                                     <exclude>org.apache.flink:flink-runtime_${scala.binary.version}</exclude>
                                     <exclude>org.apache.flink:flink-optimizer_${scala.binary.version}</exclude>
-                                    <exclude>org.apache.flink:flink-clients_${scala.binary.version}</exclude>
                                     <exclude>org.apache.flink:flink-avro_${scala.binary.version}</exclude>
                                     <exclude>org.apache.flink:flink-examples-batch_${scala.binary.version}</exclude>
                                     <exclude>org.apache.flink:flink-examples-streaming_${scala.binary.version}</exclude>
@@ -568,7 +602,8 @@
                             -->
                             <transformers>
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                                    <mainClass>cn.followtry.flink.flinktraining.examples.demo.UserNameSideOutputJob</mainClass>
+                                    <mainClass>cn.followtry.flink.flinktraining.examples.demo.TableWordCountJob</mainClass>
+                                    <!--<mainClass>cn.followtry.flink.flinktraining.examples.demo.UserNameSideOutputJob</mainClass>-->
                                 </transformer>
                             </transformers>
                             <createDependencyReducedPom>false</createDependencyReducedPom>
