@@ -1,4 +1,4 @@
-package cn.followtry.flink.flinktraining.examples.demo;
+package cn.followtry.flink.flinktraining.examples.demo.func;
 
 import cn.followtry.app.NameCount;
 import org.apache.flink.streaming.api.functions.ProcessFunction;

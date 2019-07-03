@@ -1,4 +1,4 @@
-package cn.followtry.flink.flinktraining.examples.demo;
+package cn.followtry.flink.flinktraining.examples.demo.func;
 
 import com.alibaba.fastjson.JSON;
 import org.apache.flink.api.common.functions.RichMapFunction;

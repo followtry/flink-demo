@@ -1,6 +1,7 @@
 package cn.followtry.flink.flinktraining.examples.demo;
 
 import cn.followtry.app.UserInfo;
+import cn.followtry.flink.flinktraining.examples.demo.func.ParseJsonMapFunc;
 import org.apache.flink.api.common.serialization.SimpleStringSchema;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.api.java.utils.ParameterTool;
@@ -67,7 +68,7 @@ public class TableWordCountJob {
 
 
 
-        CsvTableSink csvTableSink = new CsvTableSink("/Users/jingzhongzhi/tmp/flink_table_result", ",",3, FileSystem.WriteMode.OVERWRITE);
+        CsvTableSink csvTableSink = new CsvTableSink("/Users/jingzhongzhi/tmp/flink_table_result", ",",1, FileSystem.WriteMode.OVERWRITE);
         // register the TableSink with a specific schema
         String[] fieldNames = {"id", "name", "eventTimeStr"};
         TypeInformation[] fieldTypes = {Types.LONG(), Types.STRING(), Types.STRING()};

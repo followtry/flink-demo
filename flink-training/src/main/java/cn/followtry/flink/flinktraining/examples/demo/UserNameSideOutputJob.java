@@ -2,6 +2,14 @@ package cn.followtry.flink.flinktraining.examples.demo;
 
 import cn.followtry.app.NameCount;
 import cn.followtry.app.UserInfo;
+import cn.followtry.flink.flinktraining.examples.demo.func.CountSortFunc;
+import cn.followtry.flink.flinktraining.examples.demo.func.FilterNullFunc;
+import cn.followtry.flink.flinktraining.examples.demo.func.KeyNameSelector;
+import cn.followtry.flink.flinktraining.examples.demo.func.MySecondWatermark;
+import cn.followtry.flink.flinktraining.examples.demo.func.MyWatermark;
+import cn.followtry.flink.flinktraining.examples.demo.func.ParseJsonMapFunc;
+import cn.followtry.flink.flinktraining.examples.demo.func.SideOutputProcessFunc;
+import cn.followtry.flink.flinktraining.examples.demo.func.WindowCountFunc;
 import org.apache.flink.api.common.serialization.SimpleStringSchema;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.api.java.utils.ParameterTool;

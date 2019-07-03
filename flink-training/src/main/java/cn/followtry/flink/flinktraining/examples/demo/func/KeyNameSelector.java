@@ -1,4 +1,4 @@
-package cn.followtry.flink.flinktraining.examples.demo;
+package cn.followtry.flink.flinktraining.examples.demo.func;
 
 import cn.followtry.app.UserInfo;
 import org.apache.flink.api.java.functions.KeySelector;
