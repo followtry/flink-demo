@@ -26,7 +26,6 @@ public class ParseJsonMapFunc extends RichMapFunction<String, UserInfo> {
         UserInfo userInfo = null;
         try {
             userInfo = JSON.parseObject(value, UserInfo.class);
-            System.out.println("parse json suc. json is : " + value);
         } catch (Exception e) {
             System.out.println("parse json error. json is : " + value);
         }
