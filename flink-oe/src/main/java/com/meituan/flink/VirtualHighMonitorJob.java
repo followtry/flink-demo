@@ -1,5 +1,6 @@
 package com.meituan.flink;
 
+import com.alibaba.fastjson.JSON;
 import com.meituan.flink.common.config.JobConf;
 import com.meituan.flink.common.config.KafkaTopic;
 import com.meituan.flink.common.kafka.MTKafkaConsumer08;
@@ -13,6 +14,7 @@ import com.meituan.flink.qualitycontrol.parse.QcJsonDataParse;
 import com.meituan.flink.qualitycontrol.sink.SinkConsole3;
 import com.meituan.flink.qualitycontrol.window.WindowResultFunction;
 import org.apache.flink.api.common.functions.FlatMapFunction;
+import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.windowing.assigners.SlidingProcessingTimeWindows;
@@ -62,6 +64,53 @@ public class VirtualHighMonitorJob {
             for (GcResult gcResult : value) {
                 out.collect(gcResult);
             }
+        }
+    }
+
+    /**
+     * 将Tuple 替换为 Pojo对象
+     */
+    public static class WC extends Tuple2<String,Integer> {
+
+        /**  */
+        private String clientAppkey;
+
+        private Integer cnt;
+
+        public WC() {
+            super();
+        }
+
+        public WC(String word, Integer count) {
+            super(word, count);
+            this.clientAppkey = word;
+            this.cnt = count;
+        }
+
+        public String getClientAppkey() {
+            return getField(0);
+        }
+
+        public Integer getCnt() {
+            return getField(1);
+        }
+
+        public void setClientAppkey(String clientAppkey) {
+            this.clientAppkey = clientAppkey;
+            setField(clientAppkey,0);
+        }
+
+        public String toJsonString() {
+            return JSON.toJSONString(this);
+        }
+
+
+        @Override
+        public String toString() {
+            return "WC{" +
+                    "clientAppkey='" + getClientAppkey() + '\'' +
+                    ", cnt=" + getCnt() +
+                    '}';
         }
     }
 }
