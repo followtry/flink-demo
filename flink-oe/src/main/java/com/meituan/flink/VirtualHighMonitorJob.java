@@ -1,6 +1,5 @@
 package com.meituan.flink;
 
-import com.alibaba.fastjson.JSON;
 import com.meituan.flink.common.config.JobConf;
 import com.meituan.flink.common.config.KafkaTopic;
 import com.meituan.flink.common.kafka.MTKafkaConsumer08;
@@ -14,12 +13,12 @@ import com.meituan.flink.qualitycontrol.parse.QcJsonDataParse;
 import com.meituan.flink.qualitycontrol.sink.SinkConsole3;
 import com.meituan.flink.qualitycontrol.window.WindowResultFunction;
 import org.apache.flink.api.common.functions.FlatMapFunction;
-import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.windowing.assigners.SlidingProcessingTimeWindows;
 import org.apache.flink.streaming.api.windowing.time.Time;
 import org.apache.flink.streaming.connectors.kafka.FlinkKafkaConsumerBase;
+import org.apache.flink.util.Collector;
 
 import java.util.List;
 import java.util.Map;
@@ -45,7 +44,7 @@ public class VirtualHighMonitorJob {
         DataStream<QualityControlResultMq> jsonData = source.rebalance().map(new QcJsonDataParse()).name("2. parse json data");
         DataStream<QualityControlResultMq> filterData = jsonData.filter(o -> o != null && o.getClientAppKey() != null).uid("3. filter null data").name("3. filter null data");
 
-        DataStream<GcResult> flatMapData = filterData.map(QualityControlResultMq::getResults).flatMap((FlatMapFunction<List<GcResult>, GcResult>) (value, out) -> value.forEach(out::collect)).name("3.1 QualityControlResultMq -> GcResult");
+        DataStream<GcResult> flatMapData = filterData.map(QualityControlResultMq::getResults).flatMap(new GetGcresult()).name("3.1 QualityControlResultMq -> GcResult");
 
         //使用 aggregate 的方式先预聚合计算，内存中存的聚合后的数据非明细数据
         DataStream<ItemViewCountDO> windowdData = flatMapData.keyBy(new PoiIdSelector())
@@ -57,50 +56,12 @@ public class VirtualHighMonitorJob {
         env.execute((new JobConf(args)).getJobName());
     }
 
-    /**
-     * 将Tuple 替换为 Pojo对象
-     */
-    public static class WC extends Tuple2<String,Integer> {
-
-        /**  */
-        private String clientAppkey;
-
-        private Integer cnt;
-
-        public WC() {
-            super();
-        }
-
-        public WC(String word, Integer count) {
-            super(word, count);
-            this.clientAppkey = word;
-            this.cnt = count;
-        }
-
-        public String getClientAppkey() {
-            return getField(0);
-        }
-
-        public Integer getCnt() {
-            return getField(1);
-        }
-
-        public void setClientAppkey(String clientAppkey) {
-            this.clientAppkey = clientAppkey;
-            setField(clientAppkey,0);
-        }
-
-        public String toJsonString() {
-            return JSON.toJSONString(this);
-        }
-
-
+    public static class GetGcresult implements FlatMapFunction<List<GcResult>,GcResult> {
         @Override
-        public String toString() {
-            return "WC{" +
-                    "clientAppkey='" + getClientAppkey() + '\'' +
-                    ", cnt=" + getCnt() +
-                    '}';
+        public void flatMap(List<GcResult> value, Collector<GcResult> out) throws Exception {
+            for (GcResult gcResult : value) {
+                out.collect(gcResult);
+            }
         }
     }
 }
