@@ -84,7 +84,7 @@
         <dependency>
             <groupId>com.alibaba</groupId>
             <artifactId>fastjson</artifactId>
-            <version>1.2.29</version>
+            <version>1.2.58</version>
         </dependency>
 
         <!--注意：消费非权限版binlog使用1.1.0-java，暂时不支持同时消费权限和非权限binlog，未来会发布新的依赖版本-->
