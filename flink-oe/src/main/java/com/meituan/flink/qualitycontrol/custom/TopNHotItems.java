@@ -24,7 +24,7 @@ import java.util.List;
 public class TopNHotItems extends KeyedProcessFunction<Tuple,ItemViewCountDO,String> {
     
     /**  */
-    private Integer topSize;
+    private static Integer topSize;
 
     // 用于存储商品与点击数的状态，待收齐同一个窗口的数据后，再触发 TopN 计算
     private static ListState<ItemViewCountDO> itemState;
@@ -58,20 +58,21 @@ public class TopNHotItems extends KeyedProcessFunction<Tuple,ItemViewCountDO,Str
                 return (int) (o2.getCount() - o1.getCount());
             }
         });
+        int tempTopSize = topSize;
         // 将排名信息格式化成 String, 便于打印
         StringBuilder result = new StringBuilder();
         String now = DateFormatUtils.format(new Date(), "yyyy-MM-dd HH:mm:ss");
         result.append("==========当前时间:").append(now).append("==========================\n");
         result.append("时间: ").append(new Timestamp(timestamp-1)).append("\n");
         //避免产品数量不够导致 NPE 的异常
-        if (allItems.size() < topSize) {
-            topSize = allItems.size();
+        if (allItems.size() < tempTopSize) {
+            tempTopSize = allItems.size();
         }
-        for (int i=0;i<topSize;i++) {
+        for (int i=0;i<tempTopSize;i++) {
             ItemViewCountDO currentItem = allItems.get(i);
             // No1:  商品ID=12224  浏览量=2413
             result.append("No").append(i).append(":")
-                    .append("  商品ID=").append(currentItem.getKey())
+                    .append("  POIID=").append(currentItem.getKey())
                     .append("  浏览量=").append(currentItem.getCount())
                     .append("  winStart=").append(currentItem.getWindowStart())
                     .append("  winEnd=").append(currentItem.getWindowEnd())

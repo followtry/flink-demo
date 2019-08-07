@@ -58,8 +58,9 @@ public class UserNameCount {
         /***===========--------执行环境--------==================*/
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
         env.enableCheckpointing(1000);
-        env.setStreamTimeCharacteristic(TimeCharacteristic.ProcessingTime);
-
+        env.setStreamTimeCharacteristic(TimeCharacteristic.EventTime);
+        //自动生成水印
+        env.getConfig().setAutoWatermarkInterval(10);
 
         /***===========--------设置数据源--------==================*/
         FlinkKafkaConsumer<String> flinkKafkaConsumer011 = new FlinkKafkaConsumer<>(firstTopic, new SimpleStringSchema(), properties);
