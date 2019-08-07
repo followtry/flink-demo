@@ -41,4 +41,44 @@ public class ItemViewCountDO {
                 ", windowStart='" + windowStart + '\'' +
                 '}';
     }
+
+    public String getKey() {
+        return key;
+    }
+
+    public void setKey(String key) {
+        this.key = key;
+    }
+
+    public String getWindowStart() {
+        return windowStart;
+    }
+
+    public void setWindowStart(String windowStart) {
+        this.windowStart = windowStart;
+    }
+
+    public String getWindowEnd() {
+        return windowEnd;
+    }
+
+    public void setWindowEnd(String windowEnd) {
+        this.windowEnd = windowEnd;
+    }
+
+    public Long getWindowEndTs() {
+        return windowEndTs;
+    }
+
+    public void setWindowEndTs(Long windowEndTs) {
+        this.windowEndTs = windowEndTs;
+    }
+
+    public Long getCount() {
+        return count;
+    }
+
+    public void setCount(Long count) {
+        this.count = count;
+    }
 }
