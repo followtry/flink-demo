@@ -33,6 +33,8 @@ import java.util.Map;
  */
 public class VirtualHighMonitorJob {
 
+    public static int topN = 10;
+
     /**
      * main.
      */
@@ -49,7 +51,7 @@ public class VirtualHighMonitorJob {
         DataStream<QualityControlResultMq> jsonData = source.rebalance().map(new QcJsonDataParse()).name("2. parse json data");
         DataStream<QualityControlResultMq> filterData = jsonData.filter(o -> o != null && o.getClientAppKey() != null).uid("3. filter null data").name("3. filter null data");
 
-        DataStream<GcResult> flatMapData = filterData.map(QualityControlResultMq::getResults).flatMap(new GetGcresult()).name("3.1 QualityControlResultMq -> GcResult");
+        DataStream<GcResult> flatMapData = filterData.map(QualityControlResultMq::getResults).flatMap(new GetGcresult()).name("3.1 QualityControlResultMq ==> GcResult");
 
         DataStream<GcResult> waterMarkData = flatMapData.assignTimestampsAndWatermarks(new GcResultWatermark());
 
@@ -58,7 +60,7 @@ public class VirtualHighMonitorJob {
                 .timeWindow(Time.minutes(30), Time.minutes(5))
                 .aggregate(new CounterPoiAggrateFunction(),new WindowResultFunction()).name("4. aggregate data by poi id");
         //参考文章： https://yq.aliyun.com/articles/706029
-        DataStream<String> processData = windowdData.keyBy("windowEndTs").process(new TopNHotItems(10)).name("5. process top N");
+        DataStream<String> processData = windowdData.keyBy("windowEndTs").process(new TopNHotItems(topN)).name("5. process top " + topN);
         processData.addSink(new SinkConsole3()).name("6. sink to console");
         env.execute((new JobConf(args)).getJobName());
     }
