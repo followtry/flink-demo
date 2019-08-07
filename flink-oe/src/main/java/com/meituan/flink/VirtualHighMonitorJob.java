@@ -51,10 +51,10 @@ public class VirtualHighMonitorJob {
 
         DataStream<GcResult> flatMapData = filterData.map(QualityControlResultMq::getResults).flatMap(new GetGcresult()).name("3.1 QualityControlResultMq -> GcResult");
 
-        flatMapData.assignTimestampsAndWatermarks(new GcResultWatermark());
+        DataStream<GcResult> waterMarkData = flatMapData.assignTimestampsAndWatermarks(new GcResultWatermark());
 
         //使用 aggregate 的方式先预聚合计算，内存中存的聚合后的数据非明细数据
-        DataStream<ItemViewCountDO> windowdData = flatMapData.keyBy(new PoiIdSelector())
+        DataStream<ItemViewCountDO> windowdData = waterMarkData.keyBy(new PoiIdSelector())
                 .timeWindow(Time.minutes(30), Time.minutes(5))
                 .aggregate(new CounterPoiAggrateFunction(),new WindowResultFunction()).name("4. aggregate data by poi id");
         //参考文章： https://yq.aliyun.com/articles/706029
