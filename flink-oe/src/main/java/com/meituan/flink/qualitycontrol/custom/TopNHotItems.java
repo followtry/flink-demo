@@ -24,12 +24,12 @@ import java.util.List;
 public class TopNHotItems extends KeyedProcessFunction<Tuple,ItemViewCountDO,String> {
     
     /**  */
-    private static Integer topSize;
+    public int topSize = 5;
 
     // 用于存储商品与点击数的状态，待收齐同一个窗口的数据后，再触发 TopN 计算
     private static ListState<ItemViewCountDO> itemState;
 
-    public TopNHotItems(Integer topSize) {
+    public TopNHotItems(int topSize) {
         this.topSize = topSize;
     }
 

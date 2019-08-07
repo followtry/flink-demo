@@ -53,7 +53,7 @@ public class VirtualHighMonitorJob {
                 .window(SlidingProcessingTimeWindows.of(Time.minutes(30), Time.minutes(5)))
                 .aggregate(new CounterPoiAggrateFunction(),new WindowResultFunction()).name("4. aggregate data by poi id");
         //参考文章： https://yq.aliyun.com/articles/706029
-        DataStream<String> processData = windowdData.keyBy("windowEnd").process(new TopNHotItems(5)).name("5. process top N");
+        DataStream<String> processData = windowdData.keyBy("windowEnd").process(new TopNHotItems(10)).name("5. process top N");
         processData.addSink(new SinkConsole3()).name("6. sink to console");
         env.execute((new JobConf(args)).getJobName());
     }
