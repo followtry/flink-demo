@@ -51,6 +51,8 @@ public class GcResult implements Serializable{
 
     private Double goodsLimitPrice;
 
+    private Long time;
+
     /** 虚高原因 */
     @JSONField(name = "vhReason")
     private String virtualHighReason;
@@ -215,5 +217,13 @@ public class GcResult implements Serializable{
 
     public void setVirtualHighType(Integer virtualHighType) {
         this.virtualHighType = virtualHighType;
+    }
+
+    public Long getTime() {
+        return time;
+    }
+
+    public void setTime(Long time) {
+        this.time = time;
     }
 }

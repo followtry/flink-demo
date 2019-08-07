@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSON;
 import com.meituan.flink.common.config.JobConf;
 import com.meituan.flink.common.config.KafkaTopic;
 import com.meituan.flink.common.kafka.MTKafkaConsumer08;
+import com.meituan.flink.func.GcResultWatermark;
 import com.meituan.flink.qualitycontrol.CounterPoiAggrateFunction;
 import com.meituan.flink.qualitycontrol.custom.TopNHotItems;
 import com.meituan.flink.qualitycontrol.dto.GcResult;
@@ -15,9 +16,9 @@ import com.meituan.flink.qualitycontrol.sink.SinkConsole3;
 import com.meituan.flink.qualitycontrol.window.WindowResultFunction;
 import org.apache.flink.api.common.functions.FlatMapFunction;
 import org.apache.flink.api.java.tuple.Tuple2;
+import org.apache.flink.streaming.api.TimeCharacteristic;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
-import org.apache.flink.streaming.api.windowing.assigners.SlidingProcessingTimeWindows;
 import org.apache.flink.streaming.api.windowing.time.Time;
 import org.apache.flink.streaming.connectors.kafka.FlinkKafkaConsumerBase;
 import org.apache.flink.util.Collector;
@@ -41,6 +42,8 @@ public class VirtualHighMonitorJob {
         consumer08.build(new org.apache.flink.api.common.serialization.SimpleStringSchema());
         Map.Entry<KafkaTopic, FlinkKafkaConsumerBase> consumerBaseEntry = consumer08.getConsumerByName("app.mafka.hotel.oe.qualitycontrol.virtualhigh", "rz_kafka08-default");
 
+        env.setParallelism(1);
+        env.setStreamTimeCharacteristic(TimeCharacteristic.EventTime);
         DataStream source = env.addSource(consumerBaseEntry.getValue()).name("1. src_topic_name");
 
         DataStream<QualityControlResultMq> jsonData = source.rebalance().map(new QcJsonDataParse()).name("2. parse json data");
@@ -48,12 +51,14 @@ public class VirtualHighMonitorJob {
 
         DataStream<GcResult> flatMapData = filterData.map(QualityControlResultMq::getResults).flatMap(new GetGcresult()).name("3.1 QualityControlResultMq -> GcResult");
 
+        flatMapData.assignTimestampsAndWatermarks(new GcResultWatermark());
+
         //使用 aggregate 的方式先预聚合计算，内存中存的聚合后的数据非明细数据
         DataStream<ItemViewCountDO> windowdData = flatMapData.keyBy(new PoiIdSelector())
-                .window(SlidingProcessingTimeWindows.of(Time.minutes(30), Time.minutes(5)))
+                .timeWindow(Time.minutes(30), Time.minutes(5))
                 .aggregate(new CounterPoiAggrateFunction(),new WindowResultFunction()).name("4. aggregate data by poi id");
         //参考文章： https://yq.aliyun.com/articles/706029
-        DataStream<String> processData = windowdData.keyBy("windowEnd").process(new TopNHotItems(10)).name("5. process top N");
+        DataStream<String> processData = windowdData.keyBy("windowEndTs").process(new TopNHotItems(10)).name("5. process top N");
         processData.addSink(new SinkConsole3()).name("6. sink to console");
         env.execute((new JobConf(args)).getJobName());
     }
@@ -62,6 +67,7 @@ public class VirtualHighMonitorJob {
         @Override
         public void flatMap(List<GcResult> value, Collector<GcResult> out) throws Exception {
             for (GcResult gcResult : value) {
+                gcResult.setTime(System.currentTimeMillis());
                 out.collect(gcResult);
             }
         }

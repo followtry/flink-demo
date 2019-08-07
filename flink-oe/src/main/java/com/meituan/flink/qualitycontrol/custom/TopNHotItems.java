@@ -27,7 +27,7 @@ public class TopNHotItems extends KeyedProcessFunction<Tuple,ItemViewCountDO,Str
     public int topSize = 5;
 
     // 用于存储商品与点击数的状态，待收齐同一个窗口的数据后，再触发 TopN 计算
-    private static ListState<ItemViewCountDO> itemState;
+    private ListState<ItemViewCountDO> itemState;
 
     public TopNHotItems(int topSize) {
         this.topSize = topSize;
@@ -55,7 +55,7 @@ public class TopNHotItems extends KeyedProcessFunction<Tuple,ItemViewCountDO,Str
         allItems.sort(new Comparator<ItemViewCountDO>() {
             @Override
             public int compare(ItemViewCountDO o1, ItemViewCountDO o2) {
-                return (int) (o2.getCount() - o1.getCount());
+                return (int) (o2.count - o1.count);
             }
         });
         int tempTopSize = topSize;
@@ -72,14 +72,14 @@ public class TopNHotItems extends KeyedProcessFunction<Tuple,ItemViewCountDO,Str
             ItemViewCountDO currentItem = allItems.get(i);
             // No1:  商品ID=12224  浏览量=2413
             result.append("No").append(i).append(":")
-                    .append("  POIID=").append(currentItem.getKey())
-                    .append("  浏览量=").append(currentItem.getCount())
-                    .append("  winStart=").append(currentItem.getWindowStart())
-                    .append("  winEnd=").append(currentItem.getWindowEnd())
+                    .append("  POIID=").append(currentItem.key)
+                    .append("  浏览量=").append(currentItem.count)
+                    .append("  winStart=").append(currentItem.windowStart)
+                    .append("  winEnd=").append(currentItem.windowEnd)
+                    .append("  winEndTs=").append(currentItem.windowEndTs)
                     .append("\n");
         }
         result.append("====================================\n\n");
-        Thread.sleep(1000);
         out.collect(result.toString());
     }
 
@@ -88,6 +88,6 @@ public class TopNHotItems extends KeyedProcessFunction<Tuple,ItemViewCountDO,Str
         // 每条数据都保存到状态中
         itemState.add(value);
         // 注册 windowEnd+1 的 EventTime Timer, 当触发时，说明收齐了属于windowEnd窗口的所有商品数据
-        ctx.timerService().registerProcessingTimeTimer(value.getWindowEndTs() + 1);
+        ctx.timerService().registerProcessingTimeTimer(value.windowEndTs + 1);
     }
 }
