@@ -48,7 +48,7 @@ public class WordCount {
         properties.setProperty("zookeeper.connect",ZK_HOSTS);
 
         /***===========--------执行环境--------==================*/
-        StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
+        StreamExecutionEnvironment env = StreamExecutionEnvironment.createLocalEnvironment();
         env.enableCheckpointing(1000);
 
 
